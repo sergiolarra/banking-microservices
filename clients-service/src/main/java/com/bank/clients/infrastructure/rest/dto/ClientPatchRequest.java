@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 
 import static com.bank.clients.infrastructure.rest.dto.ClientConstraints.*;
 
-/** Body of {@code PATCH /clientes/{clientId}}: only the fields present are validated and changed. */
+/** Body of {@code PATCH /clients/{clientId}}: only the fields present are validated and changed. */
 public record ClientPatchRequest(
         @Size(min = 2, max = 100, message = NAME_SIZE) String name,
         Gender gender,

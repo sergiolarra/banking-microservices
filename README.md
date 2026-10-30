@@ -6,8 +6,8 @@ Sistema bancario con dos microservicios Spring Boot que se comunican de forma as
 
 | Servicio | Puerto | Responsabilidad | Endpoints |
 |----------|--------|-----------------|-----------|
-| `clients-service` | 8080 | Personas y clientes; publica eventos de cliente | `/clientes` |
-| `accounts-service` | 8081 | Cuentas, movimientos y reporte *Account statement* | `/cuentas`, `/movimientos`, `/reportes` |
+| `clients-service` | 8080 | Personas y clientes; publica eventos de cliente | `/clients` |
+| `accounts-service` | 8081 | Cuentas, movimientos y reporte *Account statement* | `/accounts`, `/movements`, `/reports` |
 
 El desarrollo sigue Spec-Driven Development:
 - [`docs/SPEC.md`](docs/SPEC.md): requisitos, criterios de aceptación, contratos y plan de implementación.
@@ -66,6 +66,7 @@ banking-microservices/
 |------|-----------|--------|
 | 0 | Andamiaje, infraestructura local y CI | ✅ |
 | 1 | Dominio de `clients-service` (`Person`, `Client`) y prueba unitaria F5 | ✅ |
-| 2 | API REST `/clientes`, persistencia JPA + Flyway, BCrypt, errores RFC 7807 y outbox → RabbitMQ | ✅ |
+| 2 | API REST `/clients`, persistencia JPA + Flyway, BCrypt, errores RFC 7807 y outbox → RabbitMQ | ✅ |
 | 3 | Dominio de `accounts-service` (`Account`, `Movement`, `ClientSnapshot`, `DateRange`) y reglas F2/F3 | ✅ |
-| 4–7 | Ver plan en [SPEC §13](docs/SPEC.md#13-plan-de-implementación-tareas) | Pendiente |
+| 4 | `accounts-service`: API `/accounts` y `/movements`, bloqueo por cuenta, consumidor de eventos idempotente con reintentos y DLQ | ✅ |
+| 5–7 | Ver plan en [SPEC §13](docs/SPEC.md#13-plan-de-implementación-tareas) | Pendiente |

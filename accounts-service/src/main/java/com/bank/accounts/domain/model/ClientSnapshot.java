@@ -76,8 +76,7 @@ public final class ClientSnapshot {
     /** F1-AC6, F2-AC7. */
     public void ensureCanOperate() {
         if (!canOperate()) {
-            throw new ClientUnavailableException(
-                    "Client %s is inactive or has been deleted".formatted(clientId));
+            throw ClientUnavailableException.inactiveOrDeleted(clientId);
         }
     }
 

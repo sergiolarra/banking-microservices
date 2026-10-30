@@ -91,7 +91,7 @@ class ClientApiIntegrationTest {
     void f1ManagesTheWholeClientLifecycleAndPublishesItsEvents() throws Exception {
         String identification = newIdentification();
 
-        String created = mvc.perform(post("/clientes").header(CorrelationIdFilter.HEADER, "it-lifecycle")
+        String created = mvc.perform(post("/clients").header(CorrelationIdFilter.HEADER, "it-lifecycle")
                         .contentType(MediaType.APPLICATION_JSON).content(createBody(identification)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
@@ -101,19 +101,19 @@ class ClientApiIntegrationTest {
                 String.class, clientId);
         assertThat(storedPassword).startsWith("$2a$").isNotEqualTo("Clave1234");
 
-        mvc.perform(patch("/clientes/{id}", clientId).contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(patch("/clients/{id}", clientId).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"active\":false}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(false))
                 .andExpect(jsonPath("$.name").value("Jose Lema"));
 
-        mvc.perform(put("/clientes/{id}", clientId).contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(put("/clients/{id}", clientId).contentType(MediaType.APPLICATION_JSON)
                         .content(createBody(identification).replace("Jose Lema", "Jose A. Lema")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Jose A. Lema"));
 
-        mvc.perform(delete("/clientes/{id}", clientId)).andExpect(status().isNoContent());
-        mvc.perform(get("/clientes/{id}", clientId)).andExpect(status().isNotFound());
+        mvc.perform(delete("/clients/{id}", clientId)).andExpect(status().isNoContent());
+        mvc.perform(get("/clients/{id}", clientId)).andExpect(status().isNotFound());
 
         List<JsonNode> events = receiveEventsOf(clientId, 4);
         assertThat(events).extracting(event -> event.get("type").asString())
@@ -133,20 +133,20 @@ class ClientApiIntegrationTest {
     @Test
     void f1Ac2RejectsADuplicateIdentification() throws Exception {
         String identification = newIdentification();
-        mvc.perform(post("/clientes").contentType(MediaType.APPLICATION_JSON).content(createBody(identification)))
+        mvc.perform(post("/clients").contentType(MediaType.APPLICATION_JSON).content(createBody(identification)))
                 .andExpect(status().isCreated());
 
-        mvc.perform(post("/clientes").contentType(MediaType.APPLICATION_JSON).content(createBody(identification)))
+        mvc.perform(post("/clients").contentType(MediaType.APPLICATION_JSON).content(createBody(identification)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("DUPLICATE_RESOURCE"));
     }
 
     @Test
     void listsTheStoredClients() throws Exception {
-        mvc.perform(post("/clientes").contentType(MediaType.APPLICATION_JSON).content(createBody(newIdentification())))
+        mvc.perform(post("/clients").contentType(MediaType.APPLICATION_JSON).content(createBody(newIdentification())))
                 .andExpect(status().isCreated());
 
-        mvc.perform(get("/clientes").param("size", "1"))
+        mvc.perform(get("/clients").param("size", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size").value(1))
                 .andExpect(jsonPath("$.content.length()").value(1));

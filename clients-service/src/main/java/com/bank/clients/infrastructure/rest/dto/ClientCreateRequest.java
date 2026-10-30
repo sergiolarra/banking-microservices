@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Size;
 
 import static com.bank.clients.infrastructure.rest.dto.ClientConstraints.*;
 
-/** Body of {@code POST /clientes}. Adulthood is a domain rule, so it answers 422 rather than 400 (F1-AC3). */
+/** Body of {@code POST /clients}. Adulthood is a domain rule, so it answers 422 rather than 400 (F1-AC3). */
 public record ClientCreateRequest(
         @NotBlank(message = NAME_REQUIRED) @Size(min = 2, max = 100, message = NAME_SIZE) String name,
         @NotNull(message = GENDER_REQUIRED) Gender gender,
