@@ -4,18 +4,12 @@ import com.bank.accounts.domain.model.Account;
 import com.bank.accounts.domain.model.AccountType;
 import com.bank.accounts.domain.model.ClientSnapshot;
 import com.bank.accounts.domain.port.AccountRepository;
-import com.bank.accounts.domain.port.ClientSnapshotRepository;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.math.BigDecimal;
@@ -32,17 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** F4 against real PostgreSQL 17: day boundaries in America/Guayaquil and query count. */
-@SpringBootTest
-@AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
-class AccountStatementIntegrationTest {
+class AccountStatementIntegrationTest extends IntegrationTestSupport {
 
-    @Autowired
-    private MockMvc mvc;
-    @Autowired
-    private JdbcTemplate jdbc;
-    @Autowired
-    private ClientSnapshotRepository clients;
     @Autowired
     private AccountRepository accounts;
     @Autowired
@@ -54,7 +39,7 @@ class AccountStatementIntegrationTest {
      */
     @Test
     void f4Ac1To3ReturnsTheMovementsOfTheRangeOldestFirstWithTotals() throws Exception {
-        UUID clientId = givenClient();
+        UUID clientId = givenClient(true);
         String savings = givenAccount(clientId, "100000", "2000.00", "2025.00");
         String checking = givenAccount(clientId, "200000", "50.00", "50.00");
         insertMovement(savings, "2026-10-01T04:59:59.999Z", "1.00", "2001.00");
@@ -81,7 +66,7 @@ class AccountStatementIntegrationTest {
     /** F4-AC6: the client, its accounts and their movements, whatever the number of accounts. */
     @Test
     void f4Ac6UsesAtMostThreeQueries() throws Exception {
-        UUID clientId = givenClient();
+        UUID clientId = givenClient(true);
         for (int i = 0; i < 5; i++) {
             String account = givenAccount(clientId, String.valueOf(300000 + i), "10.00", "11.00");
             insertMovement(account, "2026-10-15T12:00:00Z", "1.00", "11.00");
@@ -100,14 +85,14 @@ class AccountStatementIntegrationTest {
 
     @Test
     void f4Ac3AClientWithoutAccountsGetsAnEmptyStatement() throws Exception {
-        statement(givenClient(), "2026-10-01,2026-10-31")
+        statement(givenClient(true), "2026-10-01,2026-10-31")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accounts", hasSize(0)));
     }
 
     @Test
     void f4Ac5ADeletedClientKeepsItsHistoryAndAnUnknownOneIsNotFound() throws Exception {
-        UUID clientId = givenClient();
+        UUID clientId = givenClient(true);
         String account = givenAccount(clientId, "400000", "10.00", "10.00");
         ClientSnapshot snapshot = clients.findById(clientId).orElseThrow();
         snapshot.markDeleted(1, Instant.now());
@@ -123,12 +108,6 @@ class AccountStatementIntegrationTest {
 
     private ResultActions statement(UUID clientId, String date) throws Exception {
         return mvc.perform(get("/reports").param("date", date).param("client", clientId.toString()));
-    }
-
-    private UUID givenClient() {
-        UUID clientId = UUID.randomUUID();
-        clients.save(ClientSnapshot.create(clientId, "Jose Lema", "1712345678", true, 0, Instant.now()));
-        return clientId;
     }
 
     /**
