@@ -31,6 +31,7 @@ Los identificadores de código aparecen en inglés (ADR-023). El glosario españ
 | [ADR-021](#adr-021--dinero-y-tiempo) | `BigDecimal`/`NUMERIC(15,2)`, `Clock` inyectable | Aceptada |
 | [ADR-022](#adr-022--migración-del-stack-a-spring-boot-41) | Java 21 + Spring Boot 4.1.2 + Maven | Aceptada |
 | [ADR-023](#adr-023--idioma-del-código-y-de-los-commits) | Código y commits en inglés; mensajes y docs en español | Aceptada |
+| [ADR-024](#adr-024--principios-solid) | Principios SOLID como guía de diseño | Aceptada |
 
 ---
 
@@ -311,6 +312,32 @@ Librerías fuera del BOM: springdoc-openapi **3.2.0** (compilada contra Boot 4.1
 - `status` para "estado". Un booleano llamado `status` no dice qué significa `true`; `active` sí.
 
 **Consecuencias.** Los controladores mapean rutas en español a clases en inglés (`MovementController` → `@RequestMapping("/movimientos")`). El glosario mantiene la trazabilidad con el enunciado.
+
+## ADR-024 — Principios SOLID
+
+**Contexto.** El enunciado evalúa buenas prácticas y Clean Code. La arquitectura hexagonal (ADR-005) fija las capas, pero no dice cómo diseñar las clases dentro de cada capa. Además, en la entrevista conviene poder señalar dónde se aplica cada principio.
+
+**Decisión.** SOLID es la guía de diseño de las clases. Esta tabla dice cómo se aplica cada principio en este proyecto:
+
+| Principio | Aplicación concreta |
+|-----------|---------------------|
+| **S** — Responsabilidad única | Un caso de uso por clase (`CreateClientUseCase`, `RegisterMovementUseCase`, `GenerateAccountStatementUseCase`…), no un `ClientService` con todo. Los controladores solo traducen HTTP ↔ comandos, los mappers solo convierten objetos y `GlobalExceptionHandler` solo traduce excepciones a respuestas. Las reglas de negocio viven en el modelo de dominio. |
+| **O** — Abierto/cerrado | Cada `DomainException` declara su propio `ErrorCode` (código, estado HTTP y título), así que agregar un error nuevo no obliga a modificar el `@RestControllerAdvice`. Cada tipo de evento (`client.created`, `client.updated`, `client.deleted`) tiene su propio `ClientEventHandler`, que el consumidor resuelve por tipo: un evento nuevo es una clase nueva. |
+| **L** — Sustitución de Liskov | Cualquier implementación de un puerto (adaptador JPA o *fake* en memoria en las pruebas) cumple el mismo contrato y es intercambiable. `Client extends Person` no debilita las invariantes de `Person`. La edad mínima de `Client` (18) es más estricta que la de `Person` (0–120), y eso podría romper el principio si `Person` tuviera un *setter* de edad. Por eso las invariantes se validan en la construcción y en `updateDetails(...)` de `Client`, y `Person` no expone mutadores que `Client` restrinja. |
+| **I** — Segregación de interfaces | Los puertos son pequeños y pensados para quien los usa: `ClientRepository`, `ClientEventPublisher` y `PasswordHasher` por separado, no un "gateway" genérico. Cada controlador depende solo de los casos de uso que invoca. |
+| **D** — Inversión de dependencias | `domain` y `application` dependen de abstracciones (puertos). `infrastructure` las implementa: JPA, RabbitMQ, BCrypt. El tiempo también entra como abstracción: `Clock` inyectado. Solo inyección por constructor con campos `final`, sin `@Autowired` sobre campos. |
+
+**Verificación.** ArchUnit (ADR-018) comprueba lo verificable de forma automática:
+- `domain` no depende de `application`, `infrastructure`, Spring ni JPA.
+- `application` no depende de `infrastructure`.
+- No hay inyección por campo (`@Autowired` en campos prohibido).
+- Los controladores no acceden directamente a repositorios.
+
+**Alternativas.** Servicios por agregado (`ClientService` con todos los métodos CRUD). Es menos archivos, pero acumula responsabilidades y dependencias, y cuesta probarlo aislado.
+
+**Consecuencias.**
+- ➕ Clases pequeñas que se prueban de forma aislada y se pueden señalar en la entrevista principio por principio.
+- ➖ Más clases e interfaces. Para no caer en sobreingeniería, solo se crea una interfaz cuando hay una frontera de arquitectura (puerto) o más de una implementación real (YAGNI). Los mappers, DTOs y casos de uso son clases concretas sin interfaz.
 
 ---
 

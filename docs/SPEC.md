@@ -2,7 +2,7 @@
 
 | Versión | Estado | Fecha | Decisiones |
 |---------|--------|-------|------------|
-| 0.4 | **Borrador: pendiente de aprobación** | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
+| 0.5 | **Borrador: pendiente de aprobación** | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
 
 > **Regla de oro (SDD).** Este documento es la fuente de verdad. El código implementa lo que dice la spec. Si hay que cambiar un comportamiento, primero se cambia aquí. Cada criterio de aceptación (`Fx-ACy`) debe tener al menos una prueba que lo nombre.
 
@@ -39,6 +39,7 @@ Fuera de alcance: ver §11.
 7. **Dinero en `BigDecimal` / `NUMERIC(15,2)`**; tiempo a través de un `Clock` inyectable.
 8. **Nada sensible sale del servicio:** ni contraseñas ni stack traces.
 9. **Clean Code en inglés:** código, commits y nombres técnicos en inglés (ADR-023). Métodos cortos, sin lógica en los controladores.
+10. **SOLID** (ADR-024): un caso de uso por clase, puertos pequeños, inyección por constructor y dependencias hacia abstracciones. Interfaces solo en fronteras de arquitectura (YAGNI).
 
 ## 3. Arquitectura
 
@@ -461,7 +462,7 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 **Fase 6 — Integración** (F6) · rama `test/phase-6-integration`
 - [ ] T6.1 `MovementIntegrationTest` (incl. F2-AC5 concurrencia)
 - [ ] T6.2 `ClientEventsIntegrationTest`
-- [ ] T6.3 Test ArchUnit en ambos servicios
+- [ ] T6.3 Test ArchUnit en ambos servicios (reglas de capas y SOLID verificables, ADR-024)
 
 **Fase 7 — Despliegue y entregables** (F7) · rama `chore/phase-7-deployment`
 - [ ] T7.1 Dockerfiles multi-stage, compose completo con healthchecks
@@ -477,3 +478,4 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 | 0.2 | 2026-10-30 | Stack actualizado a Spring Boot 4.1.2 (ADR-022) |
 | 0.3 | 2026-10-30 | PostgreSQL 16 → 17 (ADR-011). Identificadores, servicios, tablas, eventos y códigos de error en inglés (ADR-023) |
 | 0.4 | 2026-10-30 | Nombres alineados con el repositorio: `clients-service`, `accounts-service`, `com.bank.clients`, `com.bank.accounts`; `Customer` → `Client` (ADR-023) |
+| 0.5 | 2026-10-30 | Principio 10: SOLID (ADR-024) |
