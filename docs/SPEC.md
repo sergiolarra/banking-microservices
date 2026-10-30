@@ -2,7 +2,7 @@
 
 | Versión | Estado | Fecha | Decisiones |
 |---------|--------|-------|------------|
-| 1.6 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
+| 1.7 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
 
 > **Regla de oro (SDD).** Este documento es la fuente de verdad. El código implementa lo que dice la spec. Si hay que cambiar un comportamiento, primero se cambia aquí. Cada criterio de aceptación (`Fx-ACy`) debe tener al menos una prueba que lo nombre.
 
@@ -359,7 +359,7 @@ account           (id BIGINT IDENTITY PK, account_number VARCHAR(10) UNIQUE, acc
                    active BOOLEAN, client_id UUID FK→client_snapshot, version BIGINT)  INDEX (client_id)
 movement          (id BIGINT IDENTITY PK, account_id BIGINT FK→account, movement_date TIMESTAMPTZ,
                    movement_type VARCHAR(10), amount NUMERIC(15,2) CHECK <> 0, balance NUMERIC(15,2) CHECK >= 0)
-                   INDEX (account_id, movement_date)
+                   CHECK tipo coherente con el signo · INDEX (account_id, movement_date, id)
 ```
 La FK `account.client_id → client_snapshot` es local a `accounts_db`: no cruza servicios. La columna se llama `movement_date` y no `date` para no usar el nombre de un tipo SQL.
 
@@ -458,16 +458,16 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 - [x] T3.2 `AccountTest` (ACC-1 … ACC-5), `DateRangeTest`
 
 **Fase 4 — `accounts-service`: aplicación e infraestructura** (F1, F2, F3) · rama `feat/phase-4-account-api`
-- [ ] T4.1 Migraciones Flyway, entidades JPA, repositorios con lock pesimista
-- [ ] T4.2 Consumidor de eventos idempotente + DLQ
-- [ ] T4.3 Casos de uso y REST de cuentas y movimientos + manejo de errores
+- [x] T4.1 Migraciones Flyway, entidades JPA, repositorios con lock pesimista
+- [x] T4.2 Consumidor de eventos idempotente + DLQ
+- [x] T4.3 Casos de uso y REST de cuentas y movimientos + manejo de errores
 
 **Fase 5 — Reporte** (F4) · rama `feat/phase-5-account-statement`
 - [ ] T5.1 `GenerateAccountStatementUseCase` + consultas optimizadas + `ReportController`
 
 **Fase 6 — Integración** (F6) · rama `test/phase-6-integration`
 - [ ] T6.1 `MovementIntegrationTest` (incl. F2-AC5 concurrencia)
-- [ ] T6.2 `ClientEventsIntegrationTest`
+- [x] T6.2 `ClientEventsIntegrationTest` (adelantada en la Fase 4)
 - [ ] T6.3 Test ArchUnit en ambos servicios (reglas de capas y SOLID verificables, ADR-024)
 
 **Fase 7 — Despliegue y entregables** (F7) · rama `chore/phase-7-deployment`
@@ -493,3 +493,4 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 | 1.4 | 2026-10-30 | Categoría `INVALID_INPUT` en `accounts-service` para `DateRange` (adenda a ADR-026). Fase 3 completada |
 | 1.5 | 2026-10-30 | Mensajes de error en inglés, incluido F3 (`"Insufficient funds"`); el reporte F4 se llama "Account statement" (ADR-027) |
 | 1.6 | 2026-10-30 | Rutas y parámetros REST en inglés: `/clients`, `/accounts`, `/movements`, `/reports?date=…&client=…` (ADR-028) |
+| 1.7 | 2026-10-30 | Fase 4 completada (persistencia, consumidor de eventos y API de `accounts-service`); T6.2 adelantada |
