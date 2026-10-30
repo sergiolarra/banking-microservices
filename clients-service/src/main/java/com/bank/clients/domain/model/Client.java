@@ -17,24 +17,30 @@ public final class Client extends Person {
     static final int MINIMUM_AGE = 18;
 
     private final UUID clientId;
+    private final Long version;
     private String passwordHash;
     private boolean active;
 
-    private Client(Long id, UUID clientId, PersonalDetails details, String passwordHash, boolean active) {
+    private Client(Long id, UUID clientId, Long version, PersonalDetails details, String passwordHash, boolean active) {
         super(id, requireAdult(details));
         this.clientId = Objects.requireNonNull(clientId, "clientId");
+        this.version = version;
         this.passwordHash = requirePasswordHash(passwordHash);
         this.active = active;
     }
 
     /** Registers a new client (CLI-2). A {@code null} {@code active} means active. */
     public static Client create(PersonalDetails details, String passwordHash, Boolean active) {
-        return new Client(null, UUID.randomUUID(), details, passwordHash, active == null || active);
+        return new Client(null, UUID.randomUUID(), null, details, passwordHash, active == null || active);
     }
 
-    /** Rebuilds a client that already exists, e.g. when loading it from persistence. */
-    public static Client restore(Long id, UUID clientId, PersonalDetails details, String passwordHash, boolean active) {
-        return new Client(id, clientId, details, passwordHash, active);
+    /**
+     * Rebuilds a client that already exists, e.g. when loading it from persistence.
+     * {@code version} increases with every stored change and orders the client events (ADR-010).
+     */
+    public static Client restore(
+            Long id, UUID clientId, Long version, PersonalDetails details, String passwordHash, boolean active) {
+        return new Client(id, clientId, version, details, passwordHash, active);
     }
 
     /** Applies new personal details with the same rules as {@link #create} (CLI-5). */
@@ -74,6 +80,11 @@ public final class Client extends Person {
 
     public UUID getClientId() {
         return clientId;
+    }
+
+    /** {@code null} until the client is stored for the first time. */
+    public Long getVersion() {
+        return version;
     }
 
     public String getPasswordHash() {

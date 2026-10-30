@@ -73,6 +73,7 @@ class ClientTest {
 
             assertThat(client.getClientId()).isNotNull();
             assertThat(client.getId()).isNull();
+            assertThat(client.getVersion()).isNull();
             assertThat(client.getName()).isEqualTo("Jose Lema");
             assertThat(client.getPasswordHash()).isEqualTo(PASSWORD_HASH);
             assertThat(client.isActive()).isTrue();
@@ -97,16 +98,17 @@ class ClientTest {
         void restoresAnExistingClientAsItWasStored() {
             UUID clientId = UUID.randomUUID();
 
-            Client client = Client.restore(7L, clientId, detailsWithAge(40), PASSWORD_HASH, false);
+            Client client = Client.restore(7L, clientId, 3L, detailsWithAge(40), PASSWORD_HASH, false);
 
             assertThat(client.getId()).isEqualTo(7L);
             assertThat(client.getClientId()).isEqualTo(clientId);
+            assertThat(client.getVersion()).isEqualTo(3L);
             assertThat(client.isActive()).isFalse();
         }
 
         @Test
         void requiresAClientIdWhenRestoring() {
-            assertThatThrownBy(() -> Client.restore(7L, null, detailsWithAge(40), PASSWORD_HASH, true))
+            assertThatThrownBy(() -> Client.restore(7L, null, 3L, detailsWithAge(40), PASSWORD_HASH, true))
                     .isInstanceOf(NullPointerException.class);
         }
     }
@@ -216,8 +218,8 @@ class ClientTest {
         @Test
         void clientsWithTheSameClientIdAreEqual() {
             UUID clientId = UUID.randomUUID();
-            Client stored = Client.restore(1L, clientId, detailsWithAge(35), PASSWORD_HASH, true);
-            Client reloaded = Client.restore(1L, clientId, detailsWithAge(50), "$2a$10$other", false);
+            Client stored = Client.restore(1L, clientId, 0L, detailsWithAge(35), PASSWORD_HASH, true);
+            Client reloaded = Client.restore(1L, clientId, 1L, detailsWithAge(50), "$2a$10$other", false);
 
             assertThat(stored).isEqualTo(reloaded).hasSameHashCodeAs(reloaded);
         }
