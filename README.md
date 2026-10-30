@@ -65,4 +65,5 @@ banking-microservices/
 | Fase | Contenido | Estado |
 |------|-----------|--------|
 | 0 | Andamiaje, infraestructura local y CI | ✅ |
-| 1–7 | Ver plan en [SPEC §13](docs/SPEC.md#13-plan-de-implementación-tareas) | Pendiente |
+| 1 | Dominio de `clients-service` (`Person`, `Client`) y prueba unitaria F5 | ✅ |
+| 2–7 | Ver plan en [SPEC §13](docs/SPEC.md#13-plan-de-implementación-tareas) | Pendiente |
