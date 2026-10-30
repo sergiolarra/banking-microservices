@@ -18,6 +18,8 @@ spring:
     username: ${RABBITMQ_USERNAME:bank}
     password: ${RABBITMQ_PASSWORD:bank}
     connection-timeout: 5s
+    # The outbox relay waits for broker confirms before marking events as published (ADR-009)
+    publisher-confirm-type: simple
 
 server:
   port: ${SERVER_PORT:8080}
@@ -31,3 +33,13 @@ management:
     health:
       probes:
         enabled: true
+
+app:
+  outbox:
+    poll-interval-ms: 1000
+    batch-size: 100
+    confirm-timeout: 5s
+
+logging:
+  pattern:
+    level: "%5p [%X{correlationId:-}]"
