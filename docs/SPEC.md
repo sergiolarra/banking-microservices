@@ -2,11 +2,11 @@
 
 | Versión | Estado | Fecha | Decisiones |
 |---------|--------|-------|------------|
-| 1.5 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
+| 1.6 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
 
 > **Regla de oro (SDD).** Este documento es la fuente de verdad. El código implementa lo que dice la spec. Si hay que cambiar un comportamiento, primero se cambia aquí. Cada criterio de aceptación (`Fx-ACy`) debe tener al menos una prueba que lo nombre.
 
-> **Idioma (ADR-023, ADR-027).** Los identificadores (clases, campos JSON, tablas, eventos, códigos de error) y los mensajes de error van en inglés, incluido el de F3 (`"Insufficient funds"`). Las rutas y parámetros que fija el enunciado y esta documentación van en español. El glosario está en ADR-023.
+> **Idioma (ADR-023, ADR-027, ADR-028).** Los identificadores (clases, campos JSON, tablas, eventos, códigos de error) y los mensajes de error van en inglés, incluido el de F3 (`"Insufficient funds"`). Las rutas y los parámetros de la API también van en inglés (`/clients`, `/accounts`, `/movements`, `/reports`, ADR-028). Solo esta documentación va en español. El glosario está en ADR-023.
 
 ---
 
@@ -45,15 +45,15 @@ Fuera de alcance: ver §11.
 ## 3. Arquitectura
 
 ```
-                      client.created / client.updated / client.deleted
-  HTTP :8080   ┌──────────────────┐      ┌─────────────────────────┐      ┌──────────────────┐   HTTP :8081
- ───────────► │ clients-service │─────►│ RabbitMQ                │─────►│ accounts-service  │ ◄───────────
-  /clientes    │ Person, Client │outbox│ exchange client.events│      │ Account, Movement│  /cuentas
-               └────────┬─────────┘      │ (topic) + DLX/DLQ       │      │ AccountStatement │  /movimientos
-                        │                └─────────────────────────┘      └────────┬─────────┘  /reportes
-                 ┌──────▼──────┐                                            ┌──────▼──────┐
-                 │ clients_db │            PostgreSQL 17                    │ accounts_db  │
-                 └─────────────┘                                            └─────────────┘
+                       client.created / client.updated / client.deleted
+ HTTP :8080  ┌──────────────────┐        ┌──────────────────────────┐        ┌──────────────────┐  HTTP :8081
+───────────► │ clients-service  │ ─────► │ RabbitMQ                 │ ─────► │ accounts-service │ ◄──────────
+ /clients    │ Person, Client   │ outbox │ exchange client.events   │        │ Account,Movement │  /accounts
+             └────────┬─────────┘        │ (topic) + DLX / DLQ      │        │ AccountStatement │  /movements
+                      │                  └──────────────────────────┘        └────────┬─────────┘  /reports
+               ┌──────▼──────┐                                                  ┌──────▼──────┐
+               │ clients_db  │                 PostgreSQL 17                    │ accounts_db │
+               └─────────────┘                                                  └─────────────┘
 ```
 
 Estructura de paquetes por servicio (ADR-005):
@@ -132,18 +132,18 @@ com.bank.{clients|accounts}
 
 ### F1 — CRUD / CRU
 
-#### `clients-service` — `/clientes`
+#### `clients-service` — `/clients`
 
 | Verbo | Ruta | Éxito | Errores |
 |-------|------|-------|---------|
-| POST | `/clientes` | 201 + `Location` | 400 validación · 409 `identification` duplicada |
-| GET | `/clientes?page=0&size=20` | 200 (página) | 400 `size > 100` |
-| GET | `/clientes/{clientId}` | 200 | 404 |
-| PUT | `/clientes/{clientId}` | 200 | 400 · 404 · 409 |
-| PATCH | `/clientes/{clientId}` | 200 | 400 · 404 · 409 |
-| DELETE | `/clientes/{clientId}` | 204 | 404 |
+| POST | `/clients` | 201 + `Location` | 400 validación · 409 `identification` duplicada |
+| GET | `/clients?page=0&size=20` | 200 (página) | 400 `size > 100` |
+| GET | `/clients/{clientId}` | 200 | 404 |
+| PUT | `/clients/{clientId}` | 200 | 400 · 404 · 409 |
+| PATCH | `/clients/{clientId}` | 200 | 400 · 404 · 409 |
+| DELETE | `/clients/{clientId}` | 204 | 404 |
 
-Petición `POST /clientes`:
+Petición `POST /clients`:
 ```json
 {
   "name": "Jose Lema",
@@ -172,36 +172,36 @@ Respuesta (sin `password`):
 - **PUT** reemplaza todos los datos personales y `active`. `password` es opcional: si llega, se cambia.
 - **PATCH** actualiza solo los campos presentes (los ausentes o `null` no cambian).
 
-#### `accounts-service` — `/cuentas`
+#### `accounts-service` — `/accounts`
 
 | Verbo | Ruta | Éxito | Errores |
 |-------|------|-------|---------|
-| POST | `/cuentas` | 201 + `Location` | 400 · 409 número duplicado · 422 cliente no disponible |
-| GET | `/cuentas?clientId=&page=&size=` | 200 (página) | 400 |
-| GET | `/cuentas/{accountNumber}` | 200 | 404 |
-| PUT | `/cuentas/{accountNumber}` | 200 | 400 · 404 |
-| PATCH | `/cuentas/{accountNumber}` | 200 | 400 · 404 |
+| POST | `/accounts` | 201 + `Location` | 400 · 409 número duplicado · 422 cliente no disponible |
+| GET | `/accounts?clientId=&page=&size=` | 200 (página) | 400 |
+| GET | `/accounts/{accountNumber}` | 200 | 404 |
+| PUT | `/accounts/{accountNumber}` | 200 | 400 · 404 |
+| PATCH | `/accounts/{accountNumber}` | 200 | 400 · 404 |
 | DELETE | — | 405 | No aplica (F1: CRU) |
 
 ```json
-// POST /cuentas
+// POST /accounts
 { "accountNumber": "478758", "accountType": "SAVINGS", "initialBalance": 2000.00, "active": true, "clientId": "3f6c2a8e-…" }
-// PUT / PATCH /cuentas/{accountNumber}: solo accountType y active son modificables
+// PUT / PATCH /accounts/{accountNumber}: solo accountType y active son modificables
 { "accountType": "CHECKING", "active": false }
 ```
 
-#### `accounts-service` — `/movimientos`
+#### `accounts-service` — `/movements`
 
 | Verbo | Ruta | Éxito | Errores |
 |-------|------|-------|---------|
-| POST | `/movimientos` | 201 + `Location` | 400 · 404 cuenta · 422 saldo / cuenta inactiva / cliente no disponible |
-| GET | `/movimientos?accountNumber=&page=&size=` | 200 (página, orden por fecha descendente) | 400 |
-| GET | `/movimientos/{id}` | 200 | 404 |
-| PUT | `/movimientos/{id}` | 200 | 400 · 404 · 409 no es el último · 422 saldo |
+| POST | `/movements` | 201 + `Location` | 400 · 404 cuenta · 422 saldo / cuenta inactiva / cliente no disponible |
+| GET | `/movements?accountNumber=&page=&size=` | 200 (página, orden por fecha descendente) | 400 |
+| GET | `/movements/{id}` | 200 | 404 |
+| PUT | `/movements/{id}` | 200 | 400 · 404 · 409 no es el último · 422 saldo |
 | PATCH / DELETE | — | 405 | No aplica (ADR-012) |
 
 ```json
-// POST /movimientos
+// POST /movements
 { "accountNumber": "478758", "amount": -575.00 }
 // 201
 { "id": 12, "date": "2026-10-30T15:04:05Z", "accountNumber": "478758",
@@ -216,13 +216,13 @@ Respuesta (sin `password`):
 - `F1-AC5` DELETE responde 204; un GET posterior responde 404; se emite `client.deleted`.
 - `F1-AC6` Crear una cuenta para un `clientId` sin snapshot, inactivo o eliminado responde 422 `CLIENT_UNAVAILABLE`.
 - `F1-AC7` PUT de cuenta no modifica `initialBalance`, `availableBalance`, `accountNumber` ni `clientId`.
-- `F1-AC8` DELETE sobre `/cuentas/{n}` o `/movimientos/{id}` responde 405.
+- `F1-AC8` DELETE sobre `/accounts/{n}` o `/movements/{id}` responde 405.
 
 ### F2 — Registro de movimientos
 
 - `F2-AC1` Cuenta con saldo 2000.00 y `amount = +600.00` → 201, `movementType = DEPOSIT`, `balance = 2600.00`; la cuenta queda con `availableBalance = 2600.00`.
 - `F2-AC2` Cuenta con saldo 2000.00 y `amount = -575.00` → 201, `movementType = WITHDRAWAL`, `balance = 1425.00`.
-- `F2-AC3` Cada movimiento queda persistido con fecha, tipo, valor y saldo resultante, y se puede consultar en `GET /movimientos`.
+- `F2-AC3` Cada movimiento queda persistido con fecha, tipo, valor y saldo resultante, y se puede consultar en `GET /movements`.
 - `F2-AC4` La actualización del saldo y el insert del movimiento son atómicos: si uno falla, no se persiste ninguno.
 - `F2-AC5` Concurrencia: 10 retiros simultáneos de 100.00 sobre una cuenta con 500.00 → exactamente 5 responden 201 y 5 responden 422; el saldo final es 0.00 (ADR-013).
 - `F2-AC6` `amount = 0`, más de 2 decimales o `|amount| > 1 000 000.00` → 400 `VALIDATION_ERROR`.
@@ -238,7 +238,7 @@ Respuesta (sin `password`):
   "title": "Insufficient funds",
   "status": 422,
   "detail": "Insufficient funds",
-  "instance": "/movimientos",
+  "instance": "/movements",
   "code": "INSUFFICIENT_FUNDS",
   "timestamp": "2026-10-30T15:04:05Z"
 }
@@ -249,9 +249,9 @@ Respuesta (sin `password`):
 
 ### F4 — Reporte "Account statement"
 
-`GET /reportes?fecha={yyyy-MM-dd},{yyyy-MM-dd}&cliente={clientId}` (`accounts-service`)
+`GET /reports?date={yyyy-MM-dd},{yyyy-MM-dd}&client={clientId}` (`accounts-service`)
 
-Los nombres de los parámetros `fecha` y `cliente` los fija el enunciado (ADR-023).
+El enunciado propone `/reportes?fecha=rango fechas & cliente`; las rutas y los parámetros van en inglés (`date`, `client`) según ADR-028. Se mantiene la forma de un solo parámetro con el rango `inicio,fin`.
 
 ```json
 {
@@ -278,8 +278,8 @@ Los nombres de los parámetros `fecha` y `cliente` los fija el enunciado (ADR-02
 - `F4-AC1` Devuelve todas las cuentas del cliente con `initialBalance`, `availableBalance` y los totales de créditos y débitos del período.
 - `F4-AC2` Incluye los movimientos cuya fecha cae dentro de `[from 00:00, to 23:59:59.999]` en la zona `app.time-zone`, ordenados por fecha ascendente.
 - `F4-AC3` Una cuenta sin movimientos en el rango aparece con `movements: []`. Un cliente sin cuentas devuelve `accounts: []` con 200.
-- `F4-AC4` Faltan `fecha` o `cliente`, el formato es inválido, `from > to` o el rango supera 366 días → 400 `INVALID_PARAMETER`.
-- `F4-AC5` Un `cliente` desconocido en la réplica → 404. Un cliente eliminado sí devuelve su reporte (histórico, ADR-016).
+- `F4-AC4` Faltan `date` o `client`, el formato es inválido, `from > to` o el rango supera 366 días → 400 `INVALID_PARAMETER`.
+- `F4-AC5` Un `client` desconocido en la réplica → 404. Un cliente eliminado sí devuelve su reporte (histórico, ADR-016).
 - `F4-AC6` Usa como máximo 3 consultas SQL sin importar cuántas cuentas haya (sin N+1).
 - `F4-AC7` `Content-Type: application/json`.
 
@@ -492,3 +492,4 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 | 1.3 | 2026-10-30 | `version` pasa de `client` a `person` (Hibernate exige `@Version` en la entidad raíz de la herencia); colas durables por RabbitMQ 4. Fase 2 completada |
 | 1.4 | 2026-10-30 | Categoría `INVALID_INPUT` en `accounts-service` para `DateRange` (adenda a ADR-026). Fase 3 completada |
 | 1.5 | 2026-10-30 | Mensajes de error en inglés, incluido F3 (`"Insufficient funds"`); el reporte F4 se llama "Account statement" (ADR-027) |
+| 1.6 | 2026-10-30 | Rutas y parámetros REST en inglés: `/clients`, `/accounts`, `/movements`, `/reports?date=…&client=…` (ADR-028) |

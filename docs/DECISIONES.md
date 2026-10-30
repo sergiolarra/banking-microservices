@@ -22,12 +22,12 @@ Los identificadores de código aparecen en inglés (ADR-023). El glosario españ
 | [ADR-012](#adr-012--semántica-de-los-movimientos) | El signo define el tipo; fecha la asigna el servidor | Aceptada |
 | [ADR-013](#adr-013--concurrencia-al-registrar-movimientos) | Bloqueo pesimista sobre la cuenta | Aceptada |
 | [ADR-014](#adr-014--manejo-de-excepciones-y-formato-de-errores) | Excepciones de dominio + RFC 7807 | Aceptada |
-| [ADR-015](#adr-015--reporte-account-statement) | `/reportes` en `accounts-service`, JSON anidado | Aceptada |
+| [ADR-015](#adr-015--reporte-account-statement) | `/reportes` en `accounts-service`, JSON anidado | Aceptada (ruta y parámetros según ADR-028) |
 | [ADR-016](#adr-016--eliminación-de-clientes) | Borrado físico del cliente, cuentas inactivadas | Aceptada |
 | [ADR-017](#adr-017--contraseñas) | BCrypt; la contraseña nunca sale del servicio | Aceptada |
 | [ADR-018](#adr-018--estrategia-de-pruebas) | JUnit + Mockito + Testcontainers + Postman | Aceptada |
 | [ADR-019](#adr-019--despliegue-en-docker) | Docker multi-stage + docker compose | Aceptada |
-| [ADR-020](#adr-020--diseño-de-rutas-y-documentación-de-la-api) | Rutas exactas del enunciado + OpenAPI | Aceptada |
+| [ADR-020](#adr-020--diseño-de-rutas-y-documentación-de-la-api) | Rutas exactas del enunciado + OpenAPI | Aceptada (nombres de rutas reemplazados por ADR-028) |
 | [ADR-021](#adr-021--dinero-y-tiempo) | `BigDecimal`/`NUMERIC(15,2)`, `Clock` inyectable | Aceptada |
 | [ADR-022](#adr-022--migración-del-stack-a-spring-boot-41) | Java 21 + Spring Boot 4.1.2 + Maven | Aceptada |
 | [ADR-023](#adr-023--idioma-del-código-y-de-los-commits) | Código y commits en inglés; mensajes y docs en español | Aceptada (mensajes reemplazados por ADR-027) |
@@ -35,6 +35,7 @@ Los identificadores de código aparecen en inglés (ADR-023). El glosario españ
 | [ADR-025](#adr-025--integración-continua-y-umbral-de-cobertura) | CI con GitHub Actions y cobertura mínima del 80 % | Aceptada |
 | [ADR-026](#adr-026--categoría-de-error-en-lugar-de-estado-http-en-el-dominio) | Categoría de error en el dominio; el estado HTTP lo decide REST | Aceptada (precisa ADR-014 y ADR-024; adenda Fase 3) |
 | [ADR-027](#adr-027--mensajes-de-error-en-inglés) | Mensajes de error en inglés (F3: "Insufficient funds"); F4 "Account statement" | Aceptada (reemplaza parte de ADR-023) |
+| [ADR-028](#adr-028--rutas-rest-en-inglés) | Rutas y parámetros REST en inglés | Aceptada (reemplaza parte de ADR-015, ADR-020 y ADR-023) |
 
 ---
 
@@ -206,6 +207,8 @@ El modelo de dominio (`Client extends Person`) y las entidades JPA (`ClientEntit
 
 ## ADR-015 — Reporte "Account statement"
 
+> **Ruta y parámetros reemplazados por [ADR-028](#adr-028--rutas-rest-en-inglés):** `GET /reports?date=inicio,fin&client={clientId}`. El resto de la decisión sigue vigente.
+
 **Decisión.** `GET /reportes?fecha=2026-01-01,2026-01-31&cliente={clientId}` respeta literalmente la forma del enunciado: un solo parámetro `fecha` con el rango `inicio,fin` en ISO-8601, ambos extremos inclusive. La respuesta es JSON anidado: client → accounts (con saldos y totales del período) → movements. Se resuelve con una consulta para las cuentas y otra para todos sus movimientos del rango (sin N+1).
 
 **Alternativas.** `fechaInicio`/`fechaFin` separados (más convencional, pero se aleja del enunciado). Una lista plana de filas (dificulta leer saldos por cuenta).
@@ -241,6 +244,8 @@ El modelo de dominio (`Client extends Person`) y las entidades JPA (`ClientEntit
 **Consecuencias.** `docker compose up --build` levanta todo desde cero.
 
 ## ADR-020 — Diseño de rutas y documentación de la API
+
+> **Nombres de rutas reemplazados por [ADR-028](#adr-028--rutas-rest-en-inglés):** `/clients`, `/accounts`, `/movements`, `/reports`. Paginación, ausencia de prefijo de versión y OpenAPI siguen vigentes.
 
 **Decisión.** Las rutas son exactamente las del enunciado (`/clientes`, `/cuentas`, `/movimientos`, `/reportes`), sin prefijo `/api/v1`, para no desviarse del contrato evaluado. Por eso las rutas van en español aunque el código esté en inglés (ADR-023). Los listados se paginan (`page`, `size`, por defecto 20 y máximo 100). Cada servicio documenta su API con springdoc-openapi en `/swagger-ui.html`.
 
@@ -279,7 +284,7 @@ Librerías fuera del BOM: springdoc-openapi **3.2.0** (compilada contra Boot 4.1
 
 ## ADR-023 — Idioma del código y de los commits
 
-> **Reemplazada en parte por [ADR-027](#adr-027--mensajes-de-error-en-inglés):** los mensajes para el usuario pasan al inglés, incluido el de F3 (`"Insufficient funds"`). El resto de esta decisión sigue vigente.
+> **Reemplazada en parte por [ADR-027](#adr-027--mensajes-de-error-en-inglés) y [ADR-028](#adr-028--rutas-rest-en-inglés):** los mensajes para el usuario y las rutas y parámetros de la API pasan al inglés. Siguen vigentes el glosario y la documentación en español.
 
 **Contexto.** Se pide que los proyectos y los commits estén en inglés. El enunciado, en cambio, fija en español las rutas (`/clientes`, `/cuentas`, `/movimientos`, `/reportes`), los parámetros del reporte (`fecha`, `cliente`) y el mensaje `"Saldo no disponible"`.
 
@@ -435,6 +440,33 @@ Librerías fuera del BOM: springdoc-openapi **3.2.0** (compilada contra Boot 4.1
 - Precisa ADR-014 (idioma de `title` y `detail`), ADR-023 (mensajes) y ADR-026 (idioma de `title()`).
 - La spec cambia los mensajes de ejemplo (SPEC §1, §4, F3, F4 y §8). Los códigos de error (`code`) no cambian.
 - El glosario de ADR-023 conserva "Estado de cuenta" → `AccountStatement`, porque traduce los términos del enunciado.
+
+## ADR-028 — Rutas REST en inglés
+
+**Contexto.** ADR-020 y ADR-023 dejaron las rutas y los parámetros con los nombres literales del enunciado (`/clientes`, `/cuentas`, `/movimientos`, `/reportes?fecha=…&cliente=…`), para no desviarse del contrato evaluado. Se pide que la API esté en inglés, igual que el código y los mensajes (ADR-027).
+
+**Decisión.** Todas las rutas y los parámetros de la API van en inglés:
+
+| Enunciado | API |
+|-----------|-----|
+| `/clientes` | `/clients` |
+| `/cuentas` | `/accounts` |
+| `/movimientos` | `/movements` |
+| `/reportes?fecha=inicio,fin&cliente=…` | `/reports?date=inicio,fin&client=…` |
+
+- `/clientes` ya estaba implementado y se renombra en la Fase 4. Las demás rutas nacen en inglés.
+- El reporte conserva la forma del enunciado: un solo parámetro con el rango `inicio,fin` y otro con el cliente.
+- Siguen vigentes los verbos, la paginación, la ausencia de prefijo `/api/v1` y OpenAPI (ADR-020).
+
+**Alternativas.**
+- Mantener las rutas del enunciado. Se descarta por decisión del propietario del proyecto, para que toda la API esté en un solo idioma.
+- Rutas en inglés con alias en español (por ejemplo `@RequestMapping({"/accounts", "/cuentas"})`). Cumpliría el enunciado al pie de la letra, pero duplica el contrato y se descartó por la misma razón.
+
+**Riesgo.** El enunciado nombra explícitamente los endpoints `/clientes`, `/cuentas`, `/movimientos` y `/reportes`. Si la evaluación usa esas rutas, recibirá 404. Volver atrás es cambiar un `@RequestMapping` por controlador y, si se quiere conservar las dos variantes, basta con agregar el alias en el mismo `@RequestMapping`.
+
+**Consecuencias.**
+- La colección de Postman (Fase 7) usa las rutas en inglés. El README y la spec lo documentan.
+- El glosario de ADR-023 mantiene la correspondencia con los términos del enunciado.
 
 ---
 
