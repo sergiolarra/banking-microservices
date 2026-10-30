@@ -2,7 +2,7 @@
 
 | Versión | Estado | Fecha | Decisiones |
 |---------|--------|-------|------------|
-| 1.9 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
+| 1.10 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
 
 > **Regla de oro (SDD).** Este documento es la fuente de verdad. El código implementa lo que dice la spec. Si hay que cambiar un comportamiento, primero se cambia aquí. Cada criterio de aceptación (`Fx-ACy`) debe tener al menos una prueba que lo nombre.
 
@@ -300,7 +300,7 @@ El enunciado propone `/reportes?fecha=rango fechas & cliente`; las rutas y los p
 - `F7-AC1` `docker compose up --build` levanta `postgres`, `rabbitmq`, `clients-service` y `accounts-service` sin pasos manuales.
 - `F7-AC2` Cada servicio expone `/actuator/health` y compose espera a que sus dependencias estén `healthy`.
 - `F7-AC3` Imágenes multi-stage, ejecutadas con un usuario sin privilegios.
-- `F7-AC4` Entregables: `database.sql`, colección y environment de Postman en `postman/`, y un `README.md` con instrucciones para levantar el sistema y probarlo.
+- `F7-AC4` Entregables: `database.sql` (generado desde las migraciones con `scripts/build-database-sql.sh`; el CI verifica que esté al día), colección y environment de Postman en `postman/`, y un `README.md` con instrucciones para levantar el sistema y probarlo.
 - `F7-AC5` El flujo de punta a punta funciona en compose: crear cliente → (evento) → crear cuenta → movimientos → reporte.
 
 ## 6. Contrato de eventos
@@ -471,11 +471,11 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 - [x] T6.3 Test ArchUnit en ambos servicios (reglas de capas y SOLID verificables, ADR-024)
 
 **Fase 7 — Despliegue y entregables** (F7) · rama `chore/phase-7-deployment`
-- [ ] T7.1 Dockerfiles multi-stage, compose completo con healthchecks
-- [ ] T7.2 `database.sql` consolidado
-- [ ] T7.3 Colección y environment Postman con tests
-- [ ] T7.4 README final + verificación de punta a punta (F7-AC5)
-- [ ] T7.5 Job `docker-e2e` en CI: compose + Newman (ADR-025)
+- [x] T7.1 Dockerfiles multi-stage, compose completo con healthchecks
+- [x] T7.2 `database.sql` consolidado
+- [x] T7.3 Colección y environment Postman con tests
+- [x] T7.4 README final + verificación de punta a punta (F7-AC5)
+- [x] T7.5 Job `docker-e2e` en CI: compose + Newman (ADR-025)
 
 ## 14. Historial de cambios de la spec
 
@@ -496,3 +496,4 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 | 1.7 | 2026-10-30 | Fase 4 completada (persistencia, consumidor de eventos y API de `accounts-service`); T6.2 adelantada |
 | 1.8 | 2026-10-30 | Fase 5 completada: reporte `GET /reports` (F4) |
 | 1.9 | 2026-10-30 | Fase 6 completada: `MovementIntegrationTest` (F6-AC1, F2-AC5) y reglas ArchUnit |
+| 1.10 | 2026-10-30 | Fase 7 completada: Dockerfiles, compose completo, `database.sql`, colección Postman y job `docker-e2e`. Plan de implementación terminado |
