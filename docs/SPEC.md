@@ -2,7 +2,7 @@
 
 | Versión | Estado | Fecha | Decisiones |
 |---------|--------|-------|------------|
-| 1.1 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
+| 1.2 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
 
 > **Regla de oro (SDD).** Este documento es la fuente de verdad. El código implementa lo que dice la spec. Si hay que cambiar un comportamiento, primero se cambia aquí. Cada criterio de aceptación (`Fx-ACy`) debe tener al menos una prueba que lo nombre.
 
@@ -441,8 +441,8 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 - [x] T0.4 `.github/workflows/ci.yml` (matriz por servicio, `mvnw verify`) + JaCoCo con control de cobertura + `lombok.config`
 
 **Fase 1 — `clients-service`: dominio** (F5) · rama `feat/phase-1-client-domain`
-- [ ] T1.1 `Person`, `Client`, enums, excepciones de dominio, puertos
-- [ ] T1.2 `ClientTest` (CLI-1 … CLI-5)
+- [x] T1.1 `Person`, `Client`, enums, excepciones de dominio, puertos
+- [x] T1.2 `ClientTest` (CLI-1 … CLI-5)
 
 **Fase 2 — `clients-service`: aplicación e infraestructura** (F1) · rama `feat/phase-2-client-api`
 - [ ] T2.1 Migraciones Flyway, entidades JPA `JOINED`, mappers, adaptador del repositorio
@@ -486,3 +486,4 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 | 0.5 | 2026-10-30 | Principio 10: SOLID (ADR-024) |
 | 1.0 | 2026-10-30 | Spec aprobada (merge del PR #1) |
 | 1.1 | 2026-10-30 | Principio 11, CI y cobertura mínima (ADR-025); tareas T0.4 y T7.5 |
+| 1.2 | 2026-10-30 | Errores de dominio con categoría en lugar de estado HTTP (ADR-026). Fase 1 completada |
