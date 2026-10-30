@@ -23,7 +23,7 @@ interface AccountJpaRepository extends JpaRepository<AccountEntity, Long> {
 
     Page<AccountEntity> findByClientId(UUID clientId, Pageable pageable);
 
-    List<AccountEntity> findAllByClientId(UUID clientId);
+    List<AccountEntity> findAllByClientIdOrderByAccountNumber(UUID clientId);
 
     boolean existsByAccountNumber(String accountNumber);
 }

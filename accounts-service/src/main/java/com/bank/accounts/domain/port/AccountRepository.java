@@ -24,6 +24,7 @@ public interface AccountRepository {
     /** @param clientId optional filter; {@code null} lists every account */
     PagedResult<Account> findAll(UUID clientId, PageQuery query);
 
+    /** Every account of the client, by account number. */
     List<Account> findAllByClientId(UUID clientId);
 
     boolean existsByAccountNumber(String accountNumber);
