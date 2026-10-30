@@ -60,3 +60,44 @@ jobs:
             ${{ matrix.service }}/target/failsafe-reports/
           if-no-files-found: ignore
           retention-days: 14
+
+  # F7: builds the real images, starts the whole system and runs the Postman collection (ADR-025)
+  docker-e2e:
+    name: docker-e2e
+    needs: build-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check that database.sql matches the migrations
+        run: |
+          scripts/build-database-sql.sh
+          git diff --exit-code database.sql
+
+      - name: Build and start the system
+        run: docker compose up -d --build --wait --wait-timeout 300
+
+      - name: Run the Postman collection
+        run: >
+          npx --yes newman@6.2.3 run postman/banking-microservices.postman_collection.json
+          -e postman/local.postman_environment.json
+          --reporters cli,junit --reporter-junit-export newman/results.xml
+
+      - name: Service logs
+        if: failure()
+        run: docker compose logs --no-color
+
+      - name: Upload Newman results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: newman-results
+          path: newman/results.xml
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Stop the system
+        if: always()
+        run: docker compose down -v
