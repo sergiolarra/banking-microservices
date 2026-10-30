@@ -18,6 +18,16 @@ spring:
     username: ${RABBITMQ_USERNAME:bank}
     password: ${RABBITMQ_PASSWORD:bank}
     connection-timeout: 5s
+    listener:
+      simple:
+        # A message that still fails after 3 retries (1 s, 2 s, 4 s) goes to the DLQ (ADR-010)
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-retries: 3
+          initial-interval: 1s
+          multiplier: 2
+          max-interval: 4s
 
 server:
   port: ${SERVER_PORT:8081}
@@ -31,3 +41,11 @@ management:
     health:
       probes:
         enabled: true
+
+app:
+  # Days of the account statement are interpreted in this zone (ADR-021)
+  time-zone: America/Guayaquil
+
+logging:
+  pattern:
+    level: "%5p [%X{correlationId:-}]"
