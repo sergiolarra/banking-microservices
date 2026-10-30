@@ -11,3 +11,6 @@
 
 ### Env ###
 .env
+
+### Newman reports ###
+newman/
