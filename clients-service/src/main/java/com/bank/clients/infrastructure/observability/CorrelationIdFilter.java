@@ -1,0 +1,47 @@
+package com.bank.clients.infrastructure.observability;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.MDC;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.UUID;
+import java.util.regex.Pattern;
+
+/**
+ * Reads or creates the {@code X-Correlation-Id} of each request, exposes it in the
+ * MDC for logs and events, and echoes it in the response (SPEC §9).
+ */
+@Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class CorrelationIdFilter extends OncePerRequestFilter {
+
+    public static final String HEADER = "X-Correlation-Id";
+    public static final String MDC_KEY = "correlationId";
+
+    /** Rejects arbitrary client input that could pollute logs. */
+    private static final Pattern VALID_ID = Pattern.compile("^[A-Za-z0-9-]{1,64}$");
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws ServletException, IOException {
+        String correlationId = resolve(request.getHeader(HEADER));
+        MDC.put(MDC_KEY, correlationId);
+        response.setHeader(HEADER, correlationId);
+        try {
+            chain.doFilter(request, response);
+        } finally {
+            MDC.remove(MDC_KEY);
+        }
+    }
+
+    private static String resolve(String header) {
+        return header != null && VALID_ID.matcher(header).matches() ? header : UUID.randomUUID().toString();
+    }
+}
