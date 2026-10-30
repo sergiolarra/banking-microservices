@@ -11,23 +11,18 @@
 	<groupId>com.bank</groupId>
 	<artifactId>accounts-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
+	<name>accounts-service</name>
+	<description>Manages accounts, movements and account statements; consumes client events.</description>
 	<properties>
 		<java.version>21</java.version>
+		<mapstruct.version>1.6.3</mapstruct.version>
+		<lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
+		<springdoc.version>3.2.0</springdoc.version>
+		<archunit.version>1.5.1</archunit.version>
+		<jacoco.version>0.8.16</jacoco.version>
+		<!-- Coverage gate (ADR-025) -->
+		<coverage.line.minimum>0.80</coverage.line.minimum>
+		<coverage.branch.minimum>0.70</coverage.branch.minimum>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -61,20 +56,19 @@
 		<dependency>
 			<groupId>org.mapstruct</groupId>
 			<artifactId>mapstruct</artifactId>
-			<version>1.6.3</version>
+			<version>${mapstruct.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>3.2.0</version>
+			<version>${springdoc.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.tngtech.archunit</groupId>
 			<artifactId>archunit</artifactId>
-			<version>1.5.1</version>
+			<version>${archunit.version}</version>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
@@ -146,6 +140,12 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<compilerArgs>
+						<arg>-Amapstruct.defaultComponentModel=spring</arg>
+						<arg>-Amapstruct.unmappedTargetPolicy=ERROR</arg>
+					</compilerArgs>
+				</configuration>
 				<executions>
 					<execution>
 						<id>default-compile</id>
@@ -158,6 +158,16 @@
 								<path>
 									<groupId>org.projectlombok</groupId>
 									<artifactId>lombok</artifactId>
+								</path>
+								<path>
+									<groupId>org.projectlombok</groupId>
+									<artifactId>lombok-mapstruct-binding</artifactId>
+									<version>${lombok-mapstruct-binding.version}</version>
+								</path>
+								<path>
+									<groupId>org.mapstruct</groupId>
+									<artifactId>mapstruct-processor</artifactId>
+									<version>${mapstruct.version}</version>
 								</path>
 							</annotationProcessorPaths>
 						</configuration>
@@ -174,7 +184,97 @@
 									<groupId>org.projectlombok</groupId>
 									<artifactId>lombok</artifactId>
 								</path>
+								<path>
+									<groupId>org.projectlombok</groupId>
+									<artifactId>lombok-mapstruct-binding</artifactId>
+									<version>${lombok-mapstruct-binding.version}</version>
+								</path>
+								<path>
+									<groupId>org.mapstruct</groupId>
+									<artifactId>mapstruct-processor</artifactId>
+									<version>${mapstruct.version}</version>
+								</path>
 							</annotationProcessorPaths>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- Unit tests only; *IntegrationTest classes run in Failsafe (F6-AC3) -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>**/*IntegrationTest.java</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<configuration>
+					<includes>
+						<include>**/*IntegrationTest.java</include>
+					</includes>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- Declared after Failsafe so report and check run once integration tests finish (ADR-025) -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.version}</version>
+				<configuration>
+					<excludes>
+						<exclude>**/*Application.class</exclude>
+						<exclude>**/*MapperImpl.class</exclude>
+					</excludes>
+				</configuration>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>check</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<rule>
+									<element>BUNDLE</element>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>${coverage.line.minimum}</minimum>
+										</limit>
+										<limit>
+											<counter>BRANCH</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>${coverage.branch.minimum}</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
 						</configuration>
 					</execution>
 				</executions>

@@ -1,4 +1,4 @@
-package com.bank.accounts;
+package com.bank.clients;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Import;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
-class AccountsServiceApplicationTests {
+class ClientsServiceApplicationIntegrationTest {
 
 	@Test
 	void contextLoads() {
