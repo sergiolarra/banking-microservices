@@ -131,9 +131,14 @@ class AccountStatementIntegrationTest {
         return clientId;
     }
 
-    /** Account numbers are prefixed per test run, so they stay unique in the shared database. */
+    /**
+     * One random prefix per test keeps account numbers unique in the shared database,
+     * while the suffix decides their order in the statement (accounts are listed by number).
+     */
+    private final String accountPrefix = String.valueOf(ThreadLocalRandom.current().nextInt(1000, 9999));
+
     private String givenAccount(UUID clientId, String suffix, String initial, String available) {
-        String number = String.valueOf(ThreadLocalRandom.current().nextInt(1000, 9999)) + suffix;
+        String number = accountPrefix + suffix;
         Account account = accounts.save(Account.open(number, AccountType.SAVINGS, new BigDecimal(initial),
                 clientId, true));
         jdbc.update("UPDATE account SET available_balance = ? WHERE id = ?", new BigDecimal(available),
