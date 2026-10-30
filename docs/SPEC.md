@@ -435,10 +435,10 @@ Todas las respuestas de error son `application/problem+json` con `type`, `title`
 Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una rama por fase y commits en inglés con Conventional Commits (ADR-023).
 
 **Fase 0 — Andamiaje** · rama `chore/phase-0-scaffolding`
-- [ ] T0.1 Estructura del monorepo, `.gitignore`, `README.md` base
-- [ ] T0.2 `pom.xml` de cada servicio (Spring Boot 4.1.2, dependencias, Surefire/Failsafe)
-- [ ] T0.3 `docker-compose.yml` con la infraestructura (postgres 17 + init de las 2 bases, rabbitmq)
-- [ ] T0.4 `.github/workflows/ci.yml` (matriz por servicio, `mvnw verify`) + JaCoCo con control de cobertura + `lombok.config`
+- [x] T0.1 Estructura del monorepo, `.gitignore`, `README.md` base
+- [x] T0.2 `pom.xml` de cada servicio (Spring Boot 4.1.2, dependencias, Surefire/Failsafe)
+- [x] T0.3 `docker-compose.yml` con la infraestructura (postgres 17 + init de las 2 bases, rabbitmq)
+- [x] T0.4 `.github/workflows/ci.yml` (matriz por servicio, `mvnw verify`) + JaCoCo con control de cobertura + `lombok.config`
 
 **Fase 1 — `clients-service`: dominio** (F5) · rama `feat/phase-1-client-domain`
 - [ ] T1.1 `Person`, `Client`, enums, excepciones de dominio, puertos
