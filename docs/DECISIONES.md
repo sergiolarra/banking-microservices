@@ -33,6 +33,7 @@ Los identificadores de código aparecen en inglés (ADR-023). El glosario españ
 | [ADR-023](#adr-023--idioma-del-código-y-de-los-commits) | Código y commits en inglés; mensajes y docs en español | Aceptada |
 | [ADR-024](#adr-024--principios-solid) | Principios SOLID como guía de diseño | Aceptada |
 | [ADR-025](#adr-025--integración-continua-y-umbral-de-cobertura) | CI con GitHub Actions y cobertura mínima del 80 % | Aceptada |
+| [ADR-026](#adr-026--categoría-de-error-en-lugar-de-estado-http-en-el-dominio) | Categoría de error en el dominio; el estado HTTP lo decide REST | Aceptada (precisa ADR-014 y ADR-024) |
 
 ---
 
@@ -388,6 +389,26 @@ Librerías fuera del BOM: springdoc-openapi **3.2.0** (compilada contra Boot 4.1
 - Cada ejecución tarda unos 4–6 minutos por servicio, por la descarga de las imágenes de Testcontainers. Los dos servicios corren en paralelo.
 - Cada PR muestra si pasa y cuánta cobertura tiene.
 - La cobertura es un piso, no el objetivo. La verificación real sigue siendo que cada criterio de aceptación (`Fx-ACy`) tenga una prueba que lo nombre (ADR-001).
+
+## ADR-026 — Categoría de error en lugar de estado HTTP en el dominio
+
+**Contexto.** ADR-024 (principio abierto/cerrado) dice que cada `DomainException` declara "código, estado HTTP y título". Pero un estado HTTP es un detalle del transporte. Si el dominio lo conoce, se rompe el principio 1 de la spec: el dominio no depende de la capa de entrada.
+
+**Decisión.** Esta ADR precisa ADR-014 y ADR-024 sin reemplazarlas:
+- Cada `DomainException` declara `code()` (por ejemplo `BUSINESS_RULE_VIOLATION`), `title()` (en español) y `category()`.
+- `ErrorCategory` es un enum neutral del dominio: `NOT_FOUND`, `CONFLICT`, `BUSINESS_RULE`.
+- El `@RestControllerAdvice` traduce cada categoría a un estado HTTP en un único lugar: `NOT_FOUND` → 404, `CONFLICT` → 409, `BUSINESS_RULE` → 422.
+- Los errores que no nacen en el dominio (`VALIDATION_ERROR`, `MALFORMED_JSON`, `INVALID_PARAMETER`, `METHOD_NOT_ALLOWED`, `INTERNAL_ERROR`) los produce directamente el manejador REST.
+- Cada servicio tiene sus propias excepciones de dominio. No se comparte una librería común entre servicios.
+
+**Alternativas.**
+- Estado HTTP como entero en cada excepción (lo que decía ADR-024). No importa Spring, pero mete un concepto de HTTP en el dominio.
+- Un mapa excepción → estado en el manejador. Agregar una excepción obligaría a editarlo, y eso rompe el principio abierto/cerrado.
+
+**Consecuencias.**
+- Agregar un error nuevo sigue siendo crear una clase, sin tocar el manejador.
+- El dominio puede reutilizarse con otra entrada (mensajería, CLI) sin arrastrar conceptos HTTP.
+- El catálogo de SPEC §8 no cambia.
 
 ---
 
