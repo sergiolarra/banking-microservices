@@ -2,7 +2,7 @@
 
 | Versión | Estado | Fecha | Decisiones |
 |---------|--------|-------|------------|
-| 1.8 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
+| 1.9 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
 
 > **Regla de oro (SDD).** Este documento es la fuente de verdad. El código implementa lo que dice la spec. Si hay que cambiar un comportamiento, primero se cambia aquí. Cada criterio de aceptación (`Fx-ACy`) debe tener al menos una prueba que lo nombre.
 
@@ -466,9 +466,9 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 - [x] T5.1 `GenerateAccountStatementUseCase` + consultas optimizadas + `ReportController`
 
 **Fase 6 — Integración** (F6) · rama `test/phase-6-integration`
-- [ ] T6.1 `MovementIntegrationTest` (incl. F2-AC5 concurrencia)
+- [x] T6.1 `MovementIntegrationTest` (incl. F2-AC5 concurrencia)
 - [x] T6.2 `ClientEventsIntegrationTest` (adelantada en la Fase 4)
-- [ ] T6.3 Test ArchUnit en ambos servicios (reglas de capas y SOLID verificables, ADR-024)
+- [x] T6.3 Test ArchUnit en ambos servicios (reglas de capas y SOLID verificables, ADR-024)
 
 **Fase 7 — Despliegue y entregables** (F7) · rama `chore/phase-7-deployment`
 - [ ] T7.1 Dockerfiles multi-stage, compose completo con healthchecks
@@ -495,3 +495,4 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 | 1.6 | 2026-10-30 | Rutas y parámetros REST en inglés: `/clients`, `/accounts`, `/movements`, `/reports?date=…&client=…` (ADR-028) |
 | 1.7 | 2026-10-30 | Fase 4 completada (persistencia, consumidor de eventos y API de `accounts-service`); T6.2 adelantada |
 | 1.8 | 2026-10-30 | Fase 5 completada: reporte `GET /reports` (F4) |
+| 1.9 | 2026-10-30 | Fase 6 completada: `MovementIntegrationTest` (F6-AC1, F2-AC5) y reglas ArchUnit |

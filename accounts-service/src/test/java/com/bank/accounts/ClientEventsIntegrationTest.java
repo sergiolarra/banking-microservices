@@ -4,7 +4,6 @@ import com.bank.accounts.domain.model.Account;
 import com.bank.accounts.domain.model.AccountType;
 import com.bank.accounts.domain.model.ClientSnapshot;
 import com.bank.accounts.domain.port.AccountRepository;
-import com.bank.accounts.domain.port.ClientSnapshotRepository;
 import com.bank.accounts.infrastructure.messaging.ClientEventsTopology;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.Message;
@@ -12,10 +11,6 @@ import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.Import;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -30,21 +25,14 @@ import static org.awaitility.Awaitility.await;
  * F6-AC2: client events published on RabbitMQ 4 keep the local replica up to date,
  * exactly once per event id, tolerating out-of-order delivery (ADR-008, ADR-010).
  */
-@SpringBootTest
-@AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
-class ClientEventsIntegrationTest {
+class ClientEventsIntegrationTest extends IntegrationTestSupport {
 
     private static final Duration TIMEOUT = Duration.ofSeconds(15);
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
     @Autowired
-    private ClientSnapshotRepository snapshots;
-    @Autowired
     private AccountRepository accounts;
-    @Autowired
-    private JdbcTemplate jdbc;
 
     @Test
     void createsTheReplicaFromClientCreated() {
@@ -88,7 +76,7 @@ class ClientEventsIntegrationTest {
         publish(event(late, "client.created", clientId, "Jose Lema", true, 0));
         await().atMost(TIMEOUT).until(() -> processed(late));
 
-        ClientSnapshot snapshot = snapshots.findById(clientId).orElseThrow();
+        ClientSnapshot snapshot = clients.findById(clientId).orElseThrow();
         assertThat(snapshot.getVersion()).isEqualTo(2);
         assertThat(snapshot.getName()).isEqualTo("Jose A. Lema");
         assertThat(snapshot.isActive()).isFalse();
@@ -129,7 +117,7 @@ class ClientEventsIntegrationTest {
     }
 
     private ClientSnapshot awaitSnapshot(UUID clientId, long version) {
-        return await().atMost(TIMEOUT).until(() -> snapshots.findById(clientId),
+        return await().atMost(TIMEOUT).until(() -> clients.findById(clientId),
                 snapshot -> snapshot.map(s -> s.getVersion() == version).orElse(false)).orElseThrow();
     }
 
