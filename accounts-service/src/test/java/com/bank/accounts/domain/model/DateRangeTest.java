@@ -45,10 +45,10 @@ class DateRangeTest {
 
         assertThatThrownBy(() -> new DateRange(from, from.plusDays(DateRange.MAX_DAYS)))
                 .isInstanceOfSatisfying(InvalidDateRangeException.class, error -> {
-                    assertThat(error).hasMessage("El rango de fechas no puede superar 366 días");
+                    assertThat(error).hasMessage("The date range cannot exceed 366 days");
                     assertThat(error.code()).isEqualTo("INVALID_PARAMETER");
                     assertThat(error.category()).isEqualTo(ErrorCategory.INVALID_INPUT);
-                    assertThat(error.title()).isEqualTo("Parámetro inválido");
+                    assertThat(error.title()).isEqualTo("Invalid parameter");
                 });
     }
 
@@ -56,7 +56,7 @@ class DateRangeTest {
     void f4Ac4RejectsAnInvertedRange() {
         assertThatThrownBy(() -> new DateRange(LocalDate.of(2026, 10, 31), LocalDate.of(2026, 10, 1)))
                 .isInstanceOf(InvalidDateRangeException.class)
-                .hasMessage("La fecha inicial no puede ser posterior a la final");
+                .hasMessage("The start date cannot be after the end date");
     }
 
     @Test

@@ -19,6 +19,6 @@ public class ClientUnavailableException extends DomainException {
 
     @Override
     public String title() {
-        return "Cliente no disponible";
+        return "Client unavailable";
     }
 }

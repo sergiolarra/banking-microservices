@@ -32,8 +32,8 @@ public final class Account {
         this.id = id;
         this.accountNumber = requireAccountNumber(accountNumber);
         this.accountType = requireAccountType(accountType);
-        this.initialBalance = requireNonNegative(initialBalance, "El saldo inicial");
-        this.availableBalance = requireNonNegative(availableBalance, "El saldo disponible");
+        this.initialBalance = requireNonNegative(initialBalance, "Initial balance");
+        this.availableBalance = requireNonNegative(availableBalance, "Available balance");
         this.active = active;
         this.clientId = Objects.requireNonNull(clientId, "clientId");
     }
@@ -69,7 +69,7 @@ public final class Account {
      */
     public void correctLatestMovement(Movement movement, Movement latestOfAccount, BigDecimal newAmount) {
         if (!accountNumber.equals(movement.getAccountNumber()) || !movement.isSameEntryAs(latestOfAccount)) {
-            throw new MovementNotModifiableException("Solo se puede modificar el último movimiento de la cuenta");
+            throw new MovementNotModifiableException("Only the latest movement of the account can be modified");
         }
         BigDecimal value = Money.movementAmount(newAmount);
         requireActive();
@@ -92,7 +92,7 @@ public final class Account {
 
     private void requireActive() {
         if (!active) {
-            throw new InactiveAccountException("Cuenta inactiva");
+            throw new InactiveAccountException("Inactive account");
         }
     }
 
@@ -106,14 +106,14 @@ public final class Account {
 
     private static String requireAccountNumber(String accountNumber) {
         if (accountNumber == null || !ACCOUNT_NUMBER.matcher(accountNumber).matches()) {
-            throw new BusinessRuleException("El número de cuenta debe tener entre 6 y 10 dígitos");
+            throw new BusinessRuleException("Account number must have 6 to 10 digits");
         }
         return accountNumber;
     }
 
     private static AccountType requireAccountType(AccountType accountType) {
         if (accountType == null) {
-            throw new BusinessRuleException("El tipo de cuenta es obligatorio");
+            throw new BusinessRuleException("Account type is required");
         }
         return accountType;
     }
@@ -121,7 +121,7 @@ public final class Account {
     private static BigDecimal requireNonNegative(BigDecimal value, String field) {
         BigDecimal scaled = Money.twoDecimals(value, field);
         if (scaled.signum() < 0) {
-            throw new BusinessRuleException(field + " debe ser mayor o igual a 0");
+            throw new BusinessRuleException(field + " must be greater than or equal to 0");
         }
         return Money.requireWithinBalanceLimit(scaled);
     }

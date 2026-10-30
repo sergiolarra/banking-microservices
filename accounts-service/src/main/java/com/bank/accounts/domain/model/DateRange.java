@@ -17,13 +17,13 @@ public record DateRange(LocalDate from, LocalDate to) {
 
     public DateRange {
         if (from == null || to == null) {
-            throw new InvalidDateRangeException("El rango de fechas requiere fecha inicial y final");
+            throw new InvalidDateRangeException("The date range requires a start and an end date");
         }
         if (from.isAfter(to)) {
-            throw new InvalidDateRangeException("La fecha inicial no puede ser posterior a la final");
+            throw new InvalidDateRangeException("The start date cannot be after the end date");
         }
         if (ChronoUnit.DAYS.between(from, to) + 1 > MAX_DAYS) {
-            throw new InvalidDateRangeException("El rango de fechas no puede superar %d días".formatted(MAX_DAYS));
+            throw new InvalidDateRangeException("The date range cannot exceed %d days".formatted(MAX_DAYS));
         }
     }
 

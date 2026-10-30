@@ -19,6 +19,6 @@ public class InvalidDateRangeException extends DomainException {
 
     @Override
     public String title() {
-        return "Parámetro inválido";
+        return "Invalid parameter";
     }
 }

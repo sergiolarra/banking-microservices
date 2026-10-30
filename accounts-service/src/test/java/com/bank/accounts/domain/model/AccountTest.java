@@ -61,7 +61,7 @@ class AccountTest {
         void rejectsAnInvalidAccountNumber(String accountNumber) {
             assertThatThrownBy(() -> Account.open(accountNumber, AccountType.SAVINGS, BigDecimal.TEN, CLIENT_ID, true))
                     .isInstanceOf(BusinessRuleException.class)
-                    .hasMessage("El número de cuenta debe tener entre 6 y 10 dígitos");
+                    .hasMessage("Account number must have 6 to 10 digits");
         }
 
         @Test
@@ -70,24 +70,24 @@ class AccountTest {
                     .isInstanceOf(BusinessRuleException.class);
             assertThatThrownBy(() -> Account.open("478758", null, BigDecimal.TEN, CLIENT_ID, true))
                     .isInstanceOf(BusinessRuleException.class)
-                    .hasMessage("El tipo de cuenta es obligatorio");
+                    .hasMessage("Account type is required");
         }
 
         @Test
         void rejectsANegativeMissingOrTooPreciseInitialBalance() {
             assertThatThrownBy(() -> Account.open("478758", AccountType.SAVINGS, money("-0.01"), CLIENT_ID, true))
-                    .hasMessage("El saldo inicial debe ser mayor o igual a 0");
+                    .hasMessage("Initial balance must be greater than or equal to 0");
             assertThatThrownBy(() -> Account.open("478758", AccountType.SAVINGS, null, CLIENT_ID, true))
-                    .hasMessage("El saldo inicial es obligatorio");
+                    .hasMessage("Initial balance is required");
             assertThatThrownBy(() -> Account.open("478758", AccountType.SAVINGS, money("1.001"), CLIENT_ID, true))
-                    .hasMessage("El saldo inicial admite como máximo 2 decimales");
+                    .hasMessage("Initial balance allows at most 2 decimals");
         }
 
         @Test
         void rejectsAnInitialBalanceThatDoesNotFitTheColumn() {
             assertThatThrownBy(() -> Account.open("478758", AccountType.SAVINGS, money("10000000000000.00"),
                     CLIENT_ID, true))
-                    .hasMessage("El saldo excede el máximo permitido");
+                    .hasMessage("The balance exceeds the maximum allowed");
         }
 
         @Test
@@ -108,10 +108,10 @@ class AccountTest {
 
             assertThatThrownBy(() -> account.registerMovement(money(amount), NOW))
                     .isInstanceOfSatisfying(BusinessRuleException.class, error -> {
-                        assertThat(error).hasMessage("El valor del movimiento no puede ser cero");
+                        assertThat(error).hasMessage("Movement amount cannot be zero");
                         assertThat(error.code()).isEqualTo("BUSINESS_RULE_VIOLATION");
                         assertThat(error.category()).isEqualTo(ErrorCategory.BUSINESS_RULE);
-                        assertThat(error.title()).isEqualTo("Regla de negocio incumplida");
+                        assertThat(error.title()).isEqualTo("Business rule violation");
                     });
             assertThat(account.getAvailableBalance()).isEqualTo(money("2000.00"));
         }
@@ -121,11 +121,11 @@ class AccountTest {
             Account account = accountWithBalance("2000.00");
 
             assertThatThrownBy(() -> account.registerMovement(null, NOW))
-                    .hasMessage("El valor del movimiento es obligatorio");
+                    .hasMessage("Movement amount is required");
             assertThatThrownBy(() -> account.registerMovement(money("10.555"), NOW))
-                    .hasMessage("El valor del movimiento admite como máximo 2 decimales");
+                    .hasMessage("Movement amount allows at most 2 decimals");
             assertThatThrownBy(() -> account.registerMovement(money("1000000.01"), NOW))
-                    .hasMessage("El valor del movimiento no puede superar 1000000.00 en valor absoluto");
+                    .hasMessage("Movement amount cannot exceed 1000000.00 in absolute value");
             assertThatThrownBy(() -> account.registerMovement(money("-1000000.01"), NOW))
                     .isInstanceOf(BusinessRuleException.class);
         }
@@ -149,10 +149,10 @@ class AccountTest {
 
             assertThatThrownBy(() -> account.registerMovement(money("100"), NOW))
                     .isInstanceOfSatisfying(InactiveAccountException.class, error -> {
-                        assertThat(error).hasMessage("Cuenta inactiva");
+                        assertThat(error).hasMessage("Inactive account");
                         assertThat(error.code()).isEqualTo("INACTIVE_ACCOUNT");
                         assertThat(error.category()).isEqualTo(ErrorCategory.BUSINESS_RULE);
-                        assertThat(error.title()).isEqualTo("Cuenta inactiva");
+                        assertThat(error.title()).isEqualTo("Inactive account");
                     });
             assertThat(account.getAvailableBalance()).isEqualTo(money("2000.00"));
         }
@@ -177,10 +177,10 @@ class AccountTest {
 
             assertThatThrownBy(() -> account.registerMovement(money("-150.00"), NOW))
                     .isInstanceOfSatisfying(InsufficientFundsException.class, error -> {
-                        assertThat(error).hasMessage("Saldo no disponible");
+                        assertThat(error).hasMessage("Insufficient funds");
                         assertThat(error.code()).isEqualTo("INSUFFICIENT_FUNDS");
                         assertThat(error.category()).isEqualTo(ErrorCategory.BUSINESS_RULE);
-                        assertThat(error.title()).isEqualTo("Saldo no disponible");
+                        assertThat(error.title()).isEqualTo("Insufficient funds");
                     });
         }
 
@@ -204,7 +204,7 @@ class AccountTest {
             Account account = accountWithBalance("9999999999999.00");
 
             assertThatThrownBy(() -> account.registerMovement(money("1.00"), NOW))
-                    .hasMessage("El saldo excede el máximo permitido");
+                    .hasMessage("The balance exceeds the maximum allowed");
         }
     }
 
@@ -299,10 +299,10 @@ class AccountTest {
             assertThatThrownBy(() -> account.correctLatestMovement(stored(8, "600.00", "2600.00"),
                     stored(9, "-1175.00", "1425.00"), money("100")))
                     .isInstanceOfSatisfying(MovementNotModifiableException.class, error -> {
-                        assertThat(error).hasMessage("Solo se puede modificar el último movimiento de la cuenta");
+                        assertThat(error).hasMessage("Only the latest movement of the account can be modified");
                         assertThat(error.code()).isEqualTo("MOVEMENT_NOT_MODIFIABLE");
                         assertThat(error.category()).isEqualTo(ErrorCategory.CONFLICT);
-                        assertThat(error.title()).isEqualTo("Movimiento no modificable");
+                        assertThat(error.title()).isEqualTo("Movement not modifiable");
                     });
         }
 
