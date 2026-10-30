@@ -2,7 +2,7 @@
 
 | Versión | Estado | Fecha | Decisiones |
 |---------|--------|-------|------------|
-| 0.5 | **Borrador: pendiente de aprobación** | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
+| 1.1 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
 
 > **Regla de oro (SDD).** Este documento es la fuente de verdad. El código implementa lo que dice la spec. Si hay que cambiar un comportamiento, primero se cambia aquí. Cada criterio de aceptación (`Fx-ACy`) debe tener al menos una prueba que lo nombre.
 
@@ -40,6 +40,7 @@ Fuera de alcance: ver §11.
 8. **Nada sensible sale del servicio:** ni contraseñas ni stack traces.
 9. **Clean Code en inglés:** código, commits y nombres técnicos en inglés (ADR-023). Métodos cortos, sin lógica en los controladores.
 10. **SOLID** (ADR-024): un caso de uso por clase, puertos pequeños, inyección por constructor y dependencias hacia abstracciones. Interfaces solo en fronteras de arquitectura (YAGNI).
+11. **Integración continua** (ADR-025): todo PR pasa por CI (`mvn verify` por servicio) con cobertura de líneas ≥ 80 % y de ramas ≥ 70 %.
 
 ## 3. Arquitectura
 
@@ -390,6 +391,7 @@ Todas las respuestas de error son `application/problem+json` con `type`, `title`
 | **Observabilidad** | Actuator (`health`, `info`, `metrics`); header `X-Correlation-Id` propagado al MDC y a los eventos | Sí |
 | **Seguridad** | BCrypt; contraseña nunca expuesta; validación de toda entrada; contenedores sin root; usuarios de base separados | Parcial: sin authN/authZ (§11) |
 | **Mantenibilidad** | Hexagonal + ArchUnit; Flyway; OpenAPI en `/swagger-ui.html` | Sí |
+| **Calidad continua** | GitHub Actions en cada PR y push a `main`; JaCoCo (pruebas unitarias + de integración) con líneas ≥ 80 % y ramas ≥ 70 %; prueba de punta a punta con compose + Newman (ADR-025) | Sí |
 
 ## 10. Límites y restricciones
 
@@ -405,6 +407,7 @@ Todas las respuestas de error son `application/problem+json` con `type`, `title`
 | Número de cuenta | 6–10 dígitos |
 | Consistencia eventual | Entre crear el cliente y que `accounts-service` lo conozca hay un retraso de ~1 s (poll del outbox). Mientras tanto, crear una cuenta responde 422 `CLIENT_UNAVAILABLE` |
 | Modificación de movimientos | Solo el último de cada cuenta |
+| Cobertura de pruebas | Por servicio: líneas ≥ 80 %, ramas ≥ 70 %. Solo se excluyen `*Application` y el código generado (ADR-025) |
 | Entorno | Java 21, Spring Boot 4.1.2, Maven 3.9, PostgreSQL 17, Docker 24+ (necesario para levantar el sistema y para las pruebas de integración) |
 
 ## 11. Fuera de alcance
@@ -425,7 +428,7 @@ Todas las respuestas de error son `application/problem+json` con `type`, `title`
 | F4 | `GenerateAccountStatementUseCase`, `ReportController`, `DateRange` (value object) | `DateRangeTest`, `GenerateAccountStatementUseCaseTest`, Postman |
 | F5 | `Client` (dominio) | `ClientTest` |
 | F6 | Contexto completo + Testcontainers | `MovementIntegrationTest`, `ClientEventsIntegrationTest` |
-| F7 | `Dockerfile` ×2, `docker-compose.yml`, `database.sql`, `postman/` | `docker compose up` + ejecución de la colección |
+| F7 | `Dockerfile` ×2, `docker-compose.yml`, `database.sql`, `postman/` | `docker compose up` + colección Postman, automatizado en el job `docker-e2e` de CI |
 
 ## 13. Plan de implementación (tareas)
 
@@ -435,6 +438,7 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 - [ ] T0.1 Estructura del monorepo, `.gitignore`, `README.md` base
 - [ ] T0.2 `pom.xml` de cada servicio (Spring Boot 4.1.2, dependencias, Surefire/Failsafe)
 - [ ] T0.3 `docker-compose.yml` con la infraestructura (postgres 17 + init de las 2 bases, rabbitmq)
+- [ ] T0.4 `.github/workflows/ci.yml` (matriz por servicio, `mvnw verify`) + JaCoCo con control de cobertura + `lombok.config`
 
 **Fase 1 — `clients-service`: dominio** (F5) · rama `feat/phase-1-client-domain`
 - [ ] T1.1 `Person`, `Client`, enums, excepciones de dominio, puertos
@@ -469,6 +473,7 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 - [ ] T7.2 `database.sql` consolidado
 - [ ] T7.3 Colección y environment Postman con tests
 - [ ] T7.4 README final + verificación de punta a punta (F7-AC5)
+- [ ] T7.5 Job `docker-e2e` en CI: compose + Newman (ADR-025)
 
 ## 14. Historial de cambios de la spec
 
@@ -479,3 +484,5 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 | 0.3 | 2026-10-30 | PostgreSQL 16 → 17 (ADR-011). Identificadores, servicios, tablas, eventos y códigos de error en inglés (ADR-023) |
 | 0.4 | 2026-10-30 | Nombres alineados con el repositorio: `clients-service`, `accounts-service`, `com.bank.clients`, `com.bank.accounts`; `Customer` → `Client` (ADR-023) |
 | 0.5 | 2026-10-30 | Principio 10: SOLID (ADR-024) |
+| 1.0 | 2026-10-30 | Spec aprobada (merge del PR #1) |
+| 1.1 | 2026-10-30 | Principio 11, CI y cobertura mínima (ADR-025); tareas T0.4 y T7.5 |

@@ -32,6 +32,7 @@ Los identificadores de código aparecen en inglés (ADR-023). El glosario españ
 | [ADR-022](#adr-022--migración-del-stack-a-spring-boot-41) | Java 21 + Spring Boot 4.1.2 + Maven | Aceptada |
 | [ADR-023](#adr-023--idioma-del-código-y-de-los-commits) | Código y commits en inglés; mensajes y docs en español | Aceptada |
 | [ADR-024](#adr-024--principios-solid) | Principios SOLID como guía de diseño | Aceptada |
+| [ADR-025](#adr-025--integración-continua-y-umbral-de-cobertura) | CI con GitHub Actions y cobertura mínima del 80 % | Aceptada |
 
 ---
 
@@ -338,6 +339,55 @@ Librerías fuera del BOM: springdoc-openapi **3.2.0** (compilada contra Boot 4.1
 **Consecuencias.**
 - ➕ Clases pequeñas que se prueban de forma aislada y se pueden señalar en la entrevista principio por principio.
 - ➖ Más clases e interfaces. Para no caer en sobreingeniería, solo se crea una interfaz cuando hay una frontera de arquitectura (puerto) o más de una implementación real (YAGNI). Los mappers, DTOs y casos de uso son clases concretas sin interfaz.
+
+## ADR-025 — Integración continua y umbral de cobertura
+
+**Contexto.** Cada cambio debe validarse automáticamente, sin depender de que alguien corra las pruebas en su máquina. Se exige además una cobertura de pruebas superior al 80 %. La regla SDD de "cada fase termina en verde" (SPEC §13) necesita algo que la haga cumplir.
+
+**Decisión.**
+
+*Pipeline* — GitHub Actions en `.github/workflows/ci.yml`:
+- Se dispara con `pull_request` hacia `main` y con `push` a `main`. Usa `permissions: contents: read` y `concurrency`, que cancela la ejecución anterior de la misma rama.
+- **Job `build-test`**, con matriz `[clients-service, accounts-service]` y `fail-fast: false`:
+  - Instala JDK 21 (Temurin) con caché de Maven.
+  - Ejecuta `./mvnw -B -ntp verify`, que compila y corre las pruebas unitarias (Surefire), las de integración (Failsafe + Testcontainers, con el Docker del runner), las reglas ArchUnit y el control de cobertura de JaCoCo.
+  - Publica el reporte HTML de JaCoCo como *artifact* y un resumen de cobertura en el *Job Summary*.
+- **Job `docker-e2e`** (depende de `build-test`; se agrega en la Fase 7):
+  - Levanta todo con `docker compose up -d --build --wait`, esperando los healthchecks.
+  - Ejecuta la colección Postman con Newman (F7-AC5).
+  - Siempre termina con `docker compose down -v`.
+
+*Control de cobertura* — JaCoCo 0.8.16, por servicio:
+- Un solo agente mide las pruebas unitarias y las de integración, y las acumula en el mismo `jacoco.exec`. Así los adaptadores (JPA, RabbitMQ, REST) también cuentan.
+- `jacoco:check` corre en la fase `verify` con dos reglas sobre el total del servicio:
+  - **Líneas ≥ 80 %**: el umbral pedido.
+  - **Ramas ≥ 70 %**: complementa al anterior, porque se puede cubrir una línea sin probar sus ramas de error.
+- Si alguna regla no se cumple, el build falla y el PR queda en rojo.
+- **Exclusiones mínimas y justificadas:**
+  - La clase `*Application`: solo tiene `main`.
+  - El código generado: implementaciones de MapStruct (`*MapperImpl`) y lo que genera Lombok, que JaCoCo ignora con `lombok.addLombokGeneratedAnnotation = true` en `lombok.config`.
+  - Nada más. Configuración, adaptadores, controladores y manejadores de errores cuentan.
+- El control rige **desde la Fase 0**: ninguna fase se cierra por debajo del umbral.
+
+*Recomendación* — Proteger `main` en GitHub (*Settings → Branches*): exigir PR y que los checks de CI pasen antes del merge.
+
+**Por qué es viable con este diseño.**
+- La arquitectura hexagonal (ADR-005) deja la lógica en `domain` y `application`, que se prueban sin Spring: es cobertura barata justo donde están las reglas.
+- Los adaptadores se cubren con `@WebMvcTest` y con las pruebas de integración de Testcontainers (ADR-018). Esas pruebas corren en CI porque los runners `ubuntu-latest` traen Docker.
+- Los puntos con más ramas tienen prueba planificada:
+  - `GlobalExceptionHandler`: una prueba por cada código del catálogo (SPEC §8).
+  - Outbox y consumidor (éxito, duplicado, versión vieja, envío a DLQ): pruebas de integración.
+
+**Alternativas.**
+- Medir solo las pruebas unitarias. Castiga a los adaptadores y empuja a abusar de los mocks.
+- SonarCloud como quality gate. Es más completo (code smells, duplicación, seguridad), pero depende de un servicio externo con token. Queda como mejora futura.
+- Umbral del 90 % o más. Tiene rendimientos decrecientes e incentiva pruebas sin valor.
+- Excluir paquetes enteros (por ejemplo `infrastructure`) para alcanzar el 80 %. Solo maquilla la métrica.
+
+**Consecuencias.**
+- Cada ejecución tarda unos 4–6 minutos por servicio, por la descarga de las imágenes de Testcontainers. Los dos servicios corren en paralelo.
+- Cada PR muestra si pasa y cuánta cobertura tiene.
+- La cobertura es un piso, no el objetivo. La verificación real sigue siendo que cada criterio de aceptación (`Fx-ACy`) tenga una prueba que lo nombre (ADR-001).
 
 ---
 
