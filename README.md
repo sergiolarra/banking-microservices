@@ -7,7 +7,7 @@ Sistema bancario con dos microservicios Spring Boot que se comunican de forma as
 | Servicio | Puerto | Responsabilidad | Endpoints |
 |----------|--------|-----------------|-----------|
 | `clients-service` | 8080 | Personas y clientes; publica eventos de cliente | `/clientes` |
-| `accounts-service` | 8081 | Cuentas, movimientos y estado de cuenta | `/cuentas`, `/movimientos`, `/reportes` |
+| `accounts-service` | 8081 | Cuentas, movimientos y reporte *Account statement* | `/cuentas`, `/movimientos`, `/reportes` |
 
 El desarrollo sigue Spec-Driven Development:
 - [`docs/SPEC.md`](docs/SPEC.md): requisitos, criterios de aceptación, contratos y plan de implementación.

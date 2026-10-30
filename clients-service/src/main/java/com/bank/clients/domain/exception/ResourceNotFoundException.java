@@ -10,7 +10,7 @@ public class ResourceNotFoundException extends DomainException {
     }
 
     public static ResourceNotFoundException client(UUID clientId) {
-        return new ResourceNotFoundException("No existe un cliente con clientId " + clientId);
+        return new ResourceNotFoundException("No client exists with clientId " + clientId);
     }
 
     @Override
@@ -25,6 +25,6 @@ public class ResourceNotFoundException extends DomainException {
 
     @Override
     public String title() {
-        return "Recurso no encontrado";
+        return "Resource not found";
     }
 }

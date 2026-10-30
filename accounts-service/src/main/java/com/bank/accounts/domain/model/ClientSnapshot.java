@@ -77,7 +77,7 @@ public final class ClientSnapshot {
     public void ensureCanOperate() {
         if (!canOperate()) {
             throw new ClientUnavailableException(
-                    "El cliente %s está inactivo o fue eliminado".formatted(clientId));
+                    "Client %s is inactive or has been deleted".formatted(clientId));
         }
     }
 

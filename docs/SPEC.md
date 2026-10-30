@@ -2,11 +2,11 @@
 
 | Versión | Estado | Fecha | Decisiones |
 |---------|--------|-------|------------|
-| 1.4 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
+| 1.5 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
 
 > **Regla de oro (SDD).** Este documento es la fuente de verdad. El código implementa lo que dice la spec. Si hay que cambiar un comportamiento, primero se cambia aquí. Cada criterio de aceptación (`Fx-ACy`) debe tener al menos una prueba que lo nombre.
 
-> **Idioma (ADR-023).** Los identificadores (clases, campos JSON, tablas, eventos, códigos de error) van en inglés. Las rutas y parámetros que fija el enunciado, los mensajes para el usuario y esta documentación van en español. El glosario está en ADR-023.
+> **Idioma (ADR-023, ADR-027).** Los identificadores (clases, campos JSON, tablas, eventos, códigos de error) y los mensajes de error van en inglés, incluido el de F3 (`"Insufficient funds"`). Las rutas y parámetros que fija el enunciado y esta documentación van en español. El glosario está en ADR-023.
 
 ---
 
@@ -20,8 +20,8 @@ Construir dos microservicios Spring Boot 4.1 (ADR-022) que gestionen clientes, c
 |----|-----------|-----------|
 | F1 | CRUD de Cliente; CRU de Cuenta y Movimiento | Obligatorio |
 | F2 | Registro de movimientos (positivos/negativos, actualiza saldo, guarda la transacción) | Obligatorio |
-| F3 | Alerta "Saldo no disponible" | Obligatorio |
-| F4 | Reporte "Estado de cuenta" por rango de fechas y cliente | Obligatorio |
+| F3 | Alerta "Insufficient funds" | Obligatorio |
+| F4 | Reporte "Account statement" por rango de fechas y cliente | Obligatorio |
 | F5 | Prueba unitaria de la entidad de dominio Cliente | Obligatorio |
 | F6 | Prueba de integración | Deseable / máxima puntuación |
 | F7 | Despliegue en contenedores Docker | Máxima puntuación |
@@ -88,7 +88,7 @@ com.bank.{clients|accounts}
 | active | Boolean | Obligatorio, por defecto `true` |
 
 **Invariantes y comportamiento de Client** (lo cubre la prueba unitaria de F5):
-- `CLI-1` Un cliente debe ser mayor de edad (`age >= 18`). Si no, lanza `BusinessRuleException("El cliente debe ser mayor de edad")`.
+- `CLI-1` Un cliente debe ser mayor de edad (`age >= 18`). Si no, lanza `BusinessRuleException("The client must be at least 18 years old")`.
 - `CLI-2` `create(...)` genera el `clientId` y deja `active = true` si no se indica otro.
 - `CLI-3` `deactivate()` / `activate()` cambian el estado. Ambas son idempotentes.
 - `CLI-4` `changePassword(hash)` rechaza un hash nulo o vacío.
@@ -107,9 +107,9 @@ com.bank.{clients|accounts}
 | clientId | UUID | Debe existir en `client_snapshot`, activo y no eliminado |
 
 **Comportamiento:** `Account.registerMovement(amount, date) → Movement`
-- `ACC-1` `amount == 0` → `BusinessRuleException("El valor del movimiento no puede ser cero")`.
-- `ACC-2` Cuenta inactiva → `InactiveAccountException("Cuenta inactiva")`.
-- `ACC-3` `availableBalance + amount < 0` → `InsufficientFundsException("Saldo no disponible")`. El saldo no cambia.
+- `ACC-1` `amount == 0` → `BusinessRuleException("Movement amount cannot be zero")`.
+- `ACC-2` Cuenta inactiva → `InactiveAccountException("Inactive account")`.
+- `ACC-3` `availableBalance + amount < 0` → `InsufficientFundsException("Insufficient funds")`. El saldo no cambia.
 - `ACC-4` En los demás casos: `availableBalance += amount` y devuelve un Movement con `balance = availableBalance` resultante.
 - `ACC-5` Un retiro que deja el saldo exactamente en 0 es válido.
 
@@ -229,15 +229,15 @@ Respuesta (sin `password`):
 - `F2-AC7` Cuenta inactiva → 422 `INACTIVE_ACCOUNT`. Cliente inactivo o eliminado → 422 `CLIENT_UNAVAILABLE`.
 - `F2-AC8` PUT sobre el último movimiento revierte su valor, aplica el nuevo y recalcula `balance` y `availableBalance`. PUT sobre uno que no es el último → 409 `MOVEMENT_NOT_MODIFIABLE`.
 
-### F3 — "Saldo no disponible"
+### F3 — "Insufficient funds"
 
 - `F3-AC1` Cuenta con saldo 100.00 y `amount = -150.00` → **422** con este cuerpo:
 ```json
 {
   "type": "https://bank.local/errors/insufficient-funds",
-  "title": "Saldo no disponible",
+  "title": "Insufficient funds",
   "status": 422,
-  "detail": "Saldo no disponible",
+  "detail": "Insufficient funds",
   "instance": "/movimientos",
   "code": "INSUFFICIENT_FUNDS",
   "timestamp": "2026-10-30T15:04:05Z"
@@ -247,7 +247,7 @@ Respuesta (sin `password`):
 - `F3-AC3` Cuenta con saldo 0.00 y cualquier retiro → mismo 422.
 - `F3-AC4` La regla vive en `Account.registerMovement` (dominio) y se traduce en el `@RestControllerAdvice` (ADR-014).
 
-### F4 — Reporte "Estado de cuenta"
+### F4 — Reporte "Account statement"
 
 `GET /reportes?fecha={yyyy-MM-dd},{yyyy-MM-dd}&cliente={clientId}` (`accounts-service`)
 
@@ -365,7 +365,7 @@ La FK `account.client_id → client_snapshot` es local a `accounts_db`: no cruza
 
 ## 8. Catálogo de errores
 
-Todas las respuestas de error son `application/problem+json` con `type`, `title`, `status`, `detail`, `instance`, `code` y `timestamp`. Las de validación agregan `errors: [{ "field": "...", "message": "..." }]`. `code` va en inglés; `title`, `detail` y `message` en español (ADR-014, ADR-023).
+Todas las respuestas de error son `application/problem+json` con `type`, `title`, `status`, `detail`, `instance`, `code` y `timestamp`. Las de validación agregan `errors: [{ "field": "...", "message": "..." }]`. `code`, `title`, `detail` y `message` van en inglés (ADR-027).
 
 | `code` | HTTP | Cuándo |
 |--------|------|--------|
@@ -377,7 +377,7 @@ Todas las respuestas de error son `application/problem+json` con `type`, `title`
 | `DUPLICATE_RESOURCE` | 409 | `identification` o `accountNumber` repetidos |
 | `MOVEMENT_NOT_MODIFIABLE` | 409 | PUT sobre un movimiento que no es el último |
 | `BUSINESS_RULE_VIOLATION` | 422 | Invariantes de dominio (menor de edad, valor cero…) |
-| `INSUFFICIENT_FUNDS` | 422 | F3 — `detail: "Saldo no disponible"` |
+| `INSUFFICIENT_FUNDS` | 422 | F3 — `detail: "Insufficient funds"` |
 | `INACTIVE_ACCOUNT` | 422 | Movimiento sobre una cuenta inactiva |
 | `CLIENT_UNAVAILABLE` | 422 | Cliente inexistente en la réplica, inactivo o eliminado |
 | `INTERNAL_ERROR` | 500 | Error inesperado (se registra en el log con correlationId; la respuesta no trae detalle técnico) |
@@ -491,3 +491,4 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 | 1.2 | 2026-10-30 | Errores de dominio con categoría en lugar de estado HTTP (ADR-026). Fase 1 completada |
 | 1.3 | 2026-10-30 | `version` pasa de `client` a `person` (Hibernate exige `@Version` en la entidad raíz de la herencia); colas durables por RabbitMQ 4. Fase 2 completada |
 | 1.4 | 2026-10-30 | Categoría `INVALID_INPUT` en `accounts-service` para `DateRange` (adenda a ADR-026). Fase 3 completada |
+| 1.5 | 2026-10-30 | Mensajes de error en inglés, incluido F3 (`"Insufficient funds"`); el reporte F4 se llama "Account statement" (ADR-027) |

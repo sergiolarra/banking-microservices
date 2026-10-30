@@ -42,16 +42,16 @@ public abstract class Person {
      */
     protected final void applyDetails(PersonalDetails details) {
         if (details == null) {
-            throw new BusinessRuleException("Los datos personales son obligatorios");
+            throw new BusinessRuleException("Personal details are required");
         }
-        String validName = requireLength(details.name(), NAME_MIN_LENGTH, NAME_MAX_LENGTH, "El nombre");
+        String validName = requireLength(details.name(), NAME_MIN_LENGTH, NAME_MAX_LENGTH, "Name");
         Gender validGender = requireGender(details.gender());
         int validAge = requireAge(details.age());
         String validIdentification = requirePattern(details.identification(), IDENTIFICATION_PATTERN,
-                "La identificación debe tener entre 5 y 20 caracteres alfanuméricos");
-        String validAddress = requireLength(details.address(), ADDRESS_MIN_LENGTH, ADDRESS_MAX_LENGTH, "La dirección");
+                "Identification must be 5 to 20 alphanumeric characters");
+        String validAddress = requireLength(details.address(), ADDRESS_MIN_LENGTH, ADDRESS_MAX_LENGTH, "Address");
         String validPhone = requirePattern(details.phone(), PHONE_PATTERN,
-                "El teléfono debe tener entre 7 y 15 dígitos, opcionalmente precedido de +");
+                "Phone must have 7 to 15 digits, optionally preceded by +");
 
         this.name = validName;
         this.gender = validGender;
@@ -64,7 +64,7 @@ public abstract class Person {
     private static String requireLength(String value, int min, int max, String field) {
         String trimmed = value == null ? "" : value.trim();
         if (trimmed.length() < min || trimmed.length() > max) {
-            throw new BusinessRuleException("%s debe tener entre %d y %d caracteres".formatted(field, min, max));
+            throw new BusinessRuleException("%s must be between %d and %d characters long".formatted(field, min, max));
         }
         return trimmed;
     }
@@ -79,14 +79,14 @@ public abstract class Person {
 
     private static Gender requireGender(Gender gender) {
         if (gender == null) {
-            throw new BusinessRuleException("El género es obligatorio");
+            throw new BusinessRuleException("Gender is required");
         }
         return gender;
     }
 
     private static int requireAge(Integer age) {
         if (age == null || age < AGE_MIN || age > AGE_MAX) {
-            throw new BusinessRuleException("La edad debe estar entre %d y %d".formatted(AGE_MIN, AGE_MAX));
+            throw new BusinessRuleException("Age must be between %d and %d".formatted(AGE_MIN, AGE_MAX));
         }
         return age;
     }

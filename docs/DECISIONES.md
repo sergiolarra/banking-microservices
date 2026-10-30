@@ -22,7 +22,7 @@ Los identificadores de código aparecen en inglés (ADR-023). El glosario españ
 | [ADR-012](#adr-012--semántica-de-los-movimientos) | El signo define el tipo; fecha la asigna el servidor | Aceptada |
 | [ADR-013](#adr-013--concurrencia-al-registrar-movimientos) | Bloqueo pesimista sobre la cuenta | Aceptada |
 | [ADR-014](#adr-014--manejo-de-excepciones-y-formato-de-errores) | Excepciones de dominio + RFC 7807 | Aceptada |
-| [ADR-015](#adr-015--reporte-estado-de-cuenta) | `/reportes` en `accounts-service`, JSON anidado | Aceptada |
+| [ADR-015](#adr-015--reporte-account-statement) | `/reportes` en `accounts-service`, JSON anidado | Aceptada |
 | [ADR-016](#adr-016--eliminación-de-clientes) | Borrado físico del cliente, cuentas inactivadas | Aceptada |
 | [ADR-017](#adr-017--contraseñas) | BCrypt; la contraseña nunca sale del servicio | Aceptada |
 | [ADR-018](#adr-018--estrategia-de-pruebas) | JUnit + Mockito + Testcontainers + Postman | Aceptada |
@@ -30,10 +30,11 @@ Los identificadores de código aparecen en inglés (ADR-023). El glosario españ
 | [ADR-020](#adr-020--diseño-de-rutas-y-documentación-de-la-api) | Rutas exactas del enunciado + OpenAPI | Aceptada |
 | [ADR-021](#adr-021--dinero-y-tiempo) | `BigDecimal`/`NUMERIC(15,2)`, `Clock` inyectable | Aceptada |
 | [ADR-022](#adr-022--migración-del-stack-a-spring-boot-41) | Java 21 + Spring Boot 4.1.2 + Maven | Aceptada |
-| [ADR-023](#adr-023--idioma-del-código-y-de-los-commits) | Código y commits en inglés; mensajes y docs en español | Aceptada |
+| [ADR-023](#adr-023--idioma-del-código-y-de-los-commits) | Código y commits en inglés; mensajes y docs en español | Aceptada (mensajes reemplazados por ADR-027) |
 | [ADR-024](#adr-024--principios-solid) | Principios SOLID como guía de diseño | Aceptada |
 | [ADR-025](#adr-025--integración-continua-y-umbral-de-cobertura) | CI con GitHub Actions y cobertura mínima del 80 % | Aceptada |
 | [ADR-026](#adr-026--categoría-de-error-en-lugar-de-estado-http-en-el-dominio) | Categoría de error en el dominio; el estado HTTP lo decide REST | Aceptada (precisa ADR-014 y ADR-024; adenda Fase 3) |
+| [ADR-027](#adr-027--mensajes-de-error-en-inglés) | Mensajes de error en inglés (F3: "Insufficient funds"); F4 "Account statement" | Aceptada (reemplaza parte de ADR-023) |
 
 ---
 
@@ -192,6 +193,8 @@ El modelo de dominio (`Client extends Person`) y las entidades JPA (`ClientEntit
 
 ## ADR-014 — Manejo de excepciones y formato de errores
 
+> **Idioma de los mensajes reemplazado por [ADR-027](#adr-027--mensajes-de-error-en-inglés):** `title` y `detail` van en inglés. El mensaje de F3 es `"Insufficient funds"`.
+
 **Decisión.**
 - El dominio lanza excepciones propias que heredan de `DomainException`, por ejemplo `InsufficientFundsException`, `InactiveAccountException` y `ResourceNotFoundException`.
 - Un único `@RestControllerAdvice` por servicio las traduce a **RFC 7807 Problem Details** (`ProblemDetail` nativo de Spring), con los campos extra `code` y `timestamp`.
@@ -201,7 +204,7 @@ El modelo de dominio (`Client extends Person`) y las entidades JPA (`ClientEntit
 
 **Alternativas.** 400 para el saldo insuficiente. Se descarta porque la petición está bien formada y lo que falla es una regla de negocio; 422 lo distingue de un error de validación.
 
-## ADR-015 — Reporte "Estado de cuenta"
+## ADR-015 — Reporte "Account statement"
 
 **Decisión.** `GET /reportes?fecha=2026-01-01,2026-01-31&cliente={clientId}` respeta literalmente la forma del enunciado: un solo parámetro `fecha` con el rango `inicio,fin` en ISO-8601, ambos extremos inclusive. La respuesta es JSON anidado: client → accounts (con saldos y totales del período) → movements. Se resuelve con una consulta para las cuentas y otra para todos sus movimientos del rango (sin N+1).
 
@@ -275,6 +278,8 @@ Librerías fuera del BOM: springdoc-openapi **3.2.0** (compilada contra Boot 4.1
 **Consecuencias.** La mayoría de los ejemplos en internet son de Boot 3. Hay que verificar los paquetes y nombres de artefactos contra la tabla anterior.
 
 ## ADR-023 — Idioma del código y de los commits
+
+> **Reemplazada en parte por [ADR-027](#adr-027--mensajes-de-error-en-inglés):** los mensajes para el usuario pasan al inglés, incluido el de F3 (`"Insufficient funds"`). El resto de esta decisión sigue vigente.
 
 **Contexto.** Se pide que los proyectos y los commits estén en inglés. El enunciado, en cambio, fija en español las rutas (`/clientes`, `/cuentas`, `/movimientos`, `/reportes`), los parámetros del reporte (`fecha`, `cliente`) y el mensaje `"Saldo no disponible"`.
 
@@ -411,6 +416,25 @@ Librerías fuera del BOM: springdoc-openapi **3.2.0** (compilada contra Boot 4.1
 - El catálogo de SPEC §8 no cambia.
 
 **Adenda (Fase 3).** `accounts-service` agrega la categoría `INVALID_INPUT` → 400. El rango de fechas del reporte (`DateRange`) es un objeto de dominio con reglas propias (`from <= to`, máximo 366 días) y, si se incumplen, debe responder 400 `INVALID_PARAMETER` (F4-AC4), no 422. Es una extensión, no un cambio de la decisión: cada servicio declara las categorías que necesita y el manejador REST sigue traduciéndolas en un único lugar.
+
+## ADR-027 — Mensajes de error en inglés
+
+**Contexto.** ADR-023 dejó en español los mensajes para el usuario (`title`, `detail` y mensajes de validación). Se pide que estén en inglés, como el resto del código, **incluido el mensaje de F3**, y que el reporte de F4 se llame "Account statement".
+
+**Decisión.**
+- Todos los mensajes de error van en **inglés** en los dos servicios: excepciones de dominio, `title` y `detail` de las respuestas RFC 7807 y mensajes de Bean Validation.
+- F3: el `title` y el `detail` de `INSUFFICIENT_FUNDS` son `"Insufficient funds"`.
+- F4: el reporte se llama **"Account statement"** en la documentación (en el código ya era `AccountStatement`).
+- Siguen en español las rutas y los parámetros que fija el enunciado (`/clientes`, `/reportes?fecha=…&cliente=…`) y la documentación (`docs/`, `README.md`). En esos puntos ADR-023 sigue vigente.
+
+**Alternativas.** Mantener el texto literal del enunciado, `"Saldo no disponible"`, como única excepción en español. Se descarta por decisión del propietario del proyecto, para que todo lo que el código expone esté en un solo idioma.
+
+**Riesgo.** El enunciado pide literalmente el mensaje `"Saldo no disponible"`. Si la evaluación busca ese texto exacto, no lo encontrará. La regla sigue cumpliéndose: el retiro se rechaza con 422, el código estable `INSUFFICIENT_FUNDS` identifica el caso y el saldo no cambia (F3-AC1 a F3-AC3). Volver al texto en español es un cambio de una sola constante (`InsufficientFundsException.MESSAGE`).
+
+**Consecuencias.**
+- Precisa ADR-014 (idioma de `title` y `detail`), ADR-023 (mensajes) y ADR-026 (idioma de `title()`).
+- La spec cambia los mensajes de ejemplo (SPEC §1, §4, F3, F4 y §8). Los códigos de error (`code`) no cambian.
+- El glosario de ADR-023 conserva "Estado de cuenta" → `AccountStatement`, porque traduce los términos del enunciado.
 
 ---
 

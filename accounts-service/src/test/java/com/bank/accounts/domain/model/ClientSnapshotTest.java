@@ -70,7 +70,7 @@ class ClientSnapshotTest {
                 .isInstanceOfSatisfying(ClientUnavailableException.class, error -> {
                     assertThat(error.code()).isEqualTo("CLIENT_UNAVAILABLE");
                     assertThat(error.category()).isEqualTo(ErrorCategory.BUSINESS_RULE);
-                    assertThat(error.title()).isEqualTo("Cliente no disponible");
+                    assertThat(error.title()).isEqualTo("Client unavailable");
                     assertThat(error).hasMessageContaining(CLIENT_ID.toString());
                 });
     }

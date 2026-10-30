@@ -64,7 +64,7 @@ class CreateClientUseCaseTest {
 
         assertThatThrownBy(() -> useCase.execute(new CreateClientCommand(details(), "Clave1234", true)))
                 .isInstanceOf(DuplicateResourceException.class)
-                .hasMessage("Ya existe un cliente con la identificación 1712345678");
+                .hasMessage("A client with identification 1712345678 already exists");
         verify(clients, never()).save(any());
         verifyNoInteractions(events);
     }

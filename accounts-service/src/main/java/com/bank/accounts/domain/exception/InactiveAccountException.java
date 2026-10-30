@@ -19,6 +19,6 @@ public class InactiveAccountException extends DomainException {
 
     @Override
     public String title() {
-        return "Cuenta inactiva";
+        return "Inactive account";
     }
 }

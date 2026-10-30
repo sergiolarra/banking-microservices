@@ -8,7 +8,7 @@ public class DuplicateResourceException extends DomainException {
     }
 
     public static DuplicateResourceException identification(String identification) {
-        return new DuplicateResourceException("Ya existe un cliente con la identificación " + identification);
+        return new DuplicateResourceException("A client with identification " + identification + " already exists");
     }
 
     @Override
@@ -23,6 +23,6 @@ public class DuplicateResourceException extends DomainException {
 
     @Override
     public String title() {
-        return "Recurso duplicado";
+        return "Duplicate resource";
     }
 }

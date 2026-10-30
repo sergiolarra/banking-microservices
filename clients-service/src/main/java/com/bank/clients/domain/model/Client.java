@@ -66,14 +66,14 @@ public final class Client extends Person {
     /** CLI-1. Age presence and range are validated by {@link Person}. */
     private static PersonalDetails requireAdult(PersonalDetails details) {
         if (details != null && details.age() != null && details.age() < MINIMUM_AGE) {
-            throw new BusinessRuleException("El cliente debe ser mayor de edad");
+            throw new BusinessRuleException("The client must be at least 18 years old");
         }
         return details;
     }
 
     private static String requirePasswordHash(String passwordHash) {
         if (passwordHash == null || passwordHash.isBlank()) {
-            throw new BusinessRuleException("La contraseña es obligatoria");
+            throw new BusinessRuleException("Password is required");
         }
         return passwordHash;
     }

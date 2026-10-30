@@ -59,10 +59,10 @@ class ClientController {
 
     @GetMapping
     PageResponse<ClientResponse> list(
-            @RequestParam(defaultValue = "0") @Min(value = 0, message = "page debe ser mayor o igual a 0") int page,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "page must be greater than or equal to 0") int page,
             @RequestParam(defaultValue = "" + PageQuery.DEFAULT_SIZE)
-            @Min(value = 1, message = "size debe estar entre 1 y 100")
-            @Max(value = PageQuery.MAX_SIZE, message = "size debe estar entre 1 y 100") int size) {
+            @Min(value = 1, message = "size must be between 1 and 100")
+            @Max(value = PageQuery.MAX_SIZE, message = "size must be between 1 and 100") int size) {
         return PageResponse.from(listClients.execute(new PageQuery(page, size)).map(mapper::toResponse));
     }
 

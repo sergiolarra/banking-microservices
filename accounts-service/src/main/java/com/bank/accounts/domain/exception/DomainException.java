@@ -5,7 +5,7 @@ package com.bank.accounts.domain.exception;
  * code, category and title, so adding a new error does not require changing the
  * exception handler (ADR-024, ADR-026).
  *
- * <p>Messages are user-facing and therefore written in Spanish (ADR-023).
+ * <p>Messages and titles are written in English (ADR-027).
  */
 public abstract class DomainException extends RuntimeException {
 

@@ -19,6 +19,6 @@ public class MovementNotModifiableException extends DomainException {
 
     @Override
     public String title() {
-        return "Movimiento no modificable";
+        return "Movement not modifiable";
     }
 }
