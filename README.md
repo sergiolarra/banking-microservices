@@ -66,4 +66,5 @@ banking-microservices/
 |------|-----------|--------|
 | 0 | Andamiaje, infraestructura local y CI | ✅ |
 | 1 | Dominio de `clients-service` (`Person`, `Client`) y prueba unitaria F5 | ✅ |
-| 2–7 | Ver plan en [SPEC §13](docs/SPEC.md#13-plan-de-implementación-tareas) | Pendiente |
+| 2 | API REST `/clientes`, persistencia JPA + Flyway, BCrypt, errores RFC 7807 y outbox → RabbitMQ | ✅ |
+| 3–7 | Ver plan en [SPEC §13](docs/SPEC.md#13-plan-de-implementación-tareas) | Pendiente |

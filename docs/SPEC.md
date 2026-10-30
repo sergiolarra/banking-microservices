@@ -2,7 +2,7 @@
 
 | Versión | Estado | Fecha | Decisiones |
 |---------|--------|-------|------------|
-| 1.2 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
+| 1.3 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
 
 > **Regla de oro (SDD).** Este documento es la fuente de verdad. El código implementa lo que dice la spec. Si hay que cambiar un comportamiento, primero se cambia aquí. Cada criterio de aceptación (`Fx-ACy`) debe tener al menos una prueba que lo nombre.
 
@@ -333,16 +333,18 @@ Sobre de cada evento (JSON):
 
 Reglas del consumidor: idempotencia por `eventId` y descarte de versiones viejas. 3 reintentos con backoff de 1 s, 2 s y 4 s; después, DLQ (ADR-010).
 
+Las colas son **durables**: RabbitMQ 4 no admite colas transitorias no exclusivas (`transient_nonexcl_queues`).
+
 ## 7. Modelo de datos
 
 PostgreSQL 17, una base por servicio (ADR-011).
 
 **`clients_db`**
 ```
-person         (id BIGINT IDENTITY PK, name VARCHAR(100), gender VARCHAR(10), age SMALLINT CHECK 0..120,
-                identification VARCHAR(20) UNIQUE, address VARCHAR(200), phone VARCHAR(16))
+person         (id BIGINT IDENTITY PK, name VARCHAR(100), gender VARCHAR(10) CHECK, age SMALLINT CHECK 0..120,
+                identification VARCHAR(20) UNIQUE, address VARCHAR(200), phone VARCHAR(16), version BIGINT)
 client       (person_id BIGINT PK FK→person.id ON DELETE CASCADE, client_id UUID UNIQUE,
-                password VARCHAR(100), active BOOLEAN, version BIGINT)
+                password VARCHAR(100), active BOOLEAN)
 outbox_event   (id UUID PK, aggregate_id UUID, type VARCHAR(50), payload JSONB, created_at TIMESTAMPTZ,
                 published_at TIMESTAMPTZ NULL)   INDEX parcial WHERE published_at IS NULL
 ```
@@ -445,11 +447,11 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 - [x] T1.2 `ClientTest` (CLI-1 … CLI-5)
 
 **Fase 2 — `clients-service`: aplicación e infraestructura** (F1) · rama `feat/phase-2-client-api`
-- [ ] T2.1 Migraciones Flyway, entidades JPA `JOINED`, mappers, adaptador del repositorio
-- [ ] T2.2 Casos de uso CRUD + BCrypt
-- [ ] T2.3 Controlador REST, DTOs, validación, `GlobalExceptionHandler`
-- [ ] T2.4 Outbox + publicador RabbitMQ
-- [ ] T2.5 Pruebas de casos de uso y `@WebMvcTest`
+- [x] T2.1 Migraciones Flyway, entidades JPA `JOINED`, mappers, adaptador del repositorio
+- [x] T2.2 Casos de uso CRUD + BCrypt
+- [x] T2.3 Controlador REST, DTOs, validación, `GlobalExceptionHandler`
+- [x] T2.4 Outbox + publicador RabbitMQ
+- [x] T2.5 Pruebas de casos de uso y `@WebMvcTest`
 
 **Fase 3 — `accounts-service`: dominio** (F2, F3) · rama `feat/phase-3-account-domain`
 - [ ] T3.1 `Account`, `Movement`, `ClientSnapshot`, `DateRange`, excepciones
@@ -487,3 +489,4 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 | 1.0 | 2026-10-30 | Spec aprobada (merge del PR #1) |
 | 1.1 | 2026-10-30 | Principio 11, CI y cobertura mínima (ADR-025); tareas T0.4 y T7.5 |
 | 1.2 | 2026-10-30 | Errores de dominio con categoría en lugar de estado HTTP (ADR-026). Fase 1 completada |
+| 1.3 | 2026-10-30 | `version` pasa de `client` a `person` (Hibernate exige `@Version` en la entidad raíz de la herencia); colas durables por RabbitMQ 4. Fase 2 completada |
