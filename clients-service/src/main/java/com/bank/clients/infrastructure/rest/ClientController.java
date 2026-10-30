@@ -36,7 +36,7 @@ import java.util.UUID;
 
 /** F1: CRUD of clients. Translates HTTP to use cases and nothing else (ADR-024). */
 @RestController
-@RequestMapping("/clientes")
+@RequestMapping("/clients")
 @RequiredArgsConstructor
 class ClientController {
 

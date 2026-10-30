@@ -45,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** HTTP contract of /clientes and the error catalog (SPEC §5 F1, §8). */
+/** HTTP contract of /clients and the error catalog (SPEC §5 F1, §8). */
 @WebMvcTest(ClientController.class)
 @Import({ClientRestMapperImpl.class, ClockConfig.class})
 class ClientControllerTest {
@@ -75,9 +75,9 @@ class ClientControllerTest {
     void f1Ac1CreatesAClientAndNeverReturnsThePassword() throws Exception {
         when(createClient.execute(new CreateClientCommand(details(), "Clave1234", true))).thenReturn(client);
 
-        mvc.perform(post("/clientes").contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
+        mvc.perform(post("/clients").contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", "http://localhost/clientes/" + client.getClientId()))
+                .andExpect(header().string("Location", "http://localhost/clients/" + client.getClientId()))
                 .andExpect(jsonPath("$.clientId").value(client.getClientId().toString()))
                 .andExpect(jsonPath("$.name").value("Jose Lema"))
                 .andExpect(jsonPath("$.active").value(true))
@@ -87,7 +87,7 @@ class ClientControllerTest {
 
     @Test
     void rejectsInvalidFieldsWithValidationError() throws Exception {
-        mvc.perform(post("/clientes").contentType(MediaType.APPLICATION_JSON).content("""
+        mvc.perform(post("/clients").contentType(MediaType.APPLICATION_JSON).content("""
                         {"name":"J","gender":"MALE","age":35,"identification":"1712345678",
                          "address":"Otavalo sn y principal","phone":"abc","password":"short"}
                         """))
@@ -96,7 +96,7 @@ class ClientControllerTest {
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.title").value("Invalid input"))
                 .andExpect(jsonPath("$.type").value("https://bank.local/errors/validation-error"))
-                .andExpect(jsonPath("$.instance").value("/clientes"))
+                .andExpect(jsonPath("$.instance").value("/clients"))
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.errors", hasSize(3)))
                 .andExpect(jsonPath("$.errors[0].field").value("name"))
@@ -108,7 +108,7 @@ class ClientControllerTest {
 
     @Test
     void rejectsAnUnknownEnumValueAsMalformedJson() throws Exception {
-        mvc.perform(post("/clientes").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/clients").contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_BODY.replace("\"MALE\"", "\"ROBOT\"")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("MALFORMED_JSON"));
@@ -116,7 +116,7 @@ class ClientControllerTest {
 
     @Test
     void rejectsABodyThatIsNotJson() throws Exception {
-        mvc.perform(post("/clientes").contentType(MediaType.APPLICATION_JSON).content("{not json"))
+        mvc.perform(post("/clients").contentType(MediaType.APPLICATION_JSON).content("{not json"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("MALFORMED_JSON"));
     }
@@ -125,7 +125,7 @@ class ClientControllerTest {
     void f1Ac2AnswersConflictForADuplicateIdentification() throws Exception {
         when(createClient.execute(any())).thenThrow(DuplicateResourceException.identification("1712345678"));
 
-        mvc.perform(post("/clientes").contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
+        mvc.perform(post("/clients").contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("DUPLICATE_RESOURCE"))
                 .andExpect(jsonPath("$.title").value("Duplicate resource"))
@@ -136,7 +136,7 @@ class ClientControllerTest {
     void f1Ac3AnswersUnprocessableForAnUnderageClient() throws Exception {
         when(createClient.execute(any())).thenThrow(new BusinessRuleException("The client must be at least 18 years old"));
 
-        mvc.perform(post("/clientes").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/clients").contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_BODY.replace("\"age\":35", "\"age\":17")))
                 .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.code").value("BUSINESS_RULE_VIOLATION"))
@@ -148,7 +148,7 @@ class ClientControllerTest {
         when(listClients.execute(new PageQuery(1, 5)))
                 .thenReturn(new PagedResult<>(List.of(client), 1, 5, 6));
 
-        mvc.perform(get("/clientes").param("page", "1").param("size", "5"))
+        mvc.perform(get("/clients").param("page", "1").param("size", "5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].clientId").value(client.getClientId().toString()))
                 .andExpect(jsonPath("$.page").value(1))
@@ -161,12 +161,12 @@ class ClientControllerTest {
     void usesTheDefaultPage() throws Exception {
         when(listClients.execute(new PageQuery(0, 20))).thenReturn(new PagedResult<>(List.of(), 0, 20, 0));
 
-        mvc.perform(get("/clientes")).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(0)));
+        mvc.perform(get("/clients")).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(0)));
     }
 
     @Test
     void rejectsAPageSizeAboveTheLimit() throws Exception {
-        mvc.perform(get("/clientes").param("size", "101"))
+        mvc.perform(get("/clients").param("size", "101"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_PARAMETER"))
                 .andExpect(jsonPath("$.errors[0].field").value("size"))
@@ -177,7 +177,7 @@ class ClientControllerTest {
     void getsOneClient() throws Exception {
         when(getClient.execute(client.getClientId())).thenReturn(client);
 
-        mvc.perform(get("/clientes/{clientId}", client.getClientId()))
+        mvc.perform(get("/clients/{clientId}", client.getClientId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.identification").value("1712345678"));
     }
@@ -187,15 +187,15 @@ class ClientControllerTest {
         UUID unknown = UUID.randomUUID();
         when(getClient.execute(unknown)).thenThrow(ResourceNotFoundException.client(unknown));
 
-        mvc.perform(get("/clientes/{clientId}", unknown))
+        mvc.perform(get("/clients/{clientId}", unknown))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"))
-                .andExpect(jsonPath("$.instance").value("/clientes/" + unknown));
+                .andExpect(jsonPath("$.instance").value("/clients/" + unknown));
     }
 
     @Test
     void rejectsAClientIdThatIsNotAUuid() throws Exception {
-        mvc.perform(get("/clientes/{clientId}", "abc"))
+        mvc.perform(get("/clients/{clientId}", "abc"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_PARAMETER"))
                 .andExpect(jsonPath("$.detail").value("Parameter 'clientId' has an invalid value"));
@@ -207,7 +207,7 @@ class ClientControllerTest {
                 "Otavalo sn y principal", "098254785", null, false);
         when(updateClient.execute(client.getClientId(), expected)).thenReturn(client);
 
-        mvc.perform(put("/clientes/{clientId}", client.getClientId()).contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(put("/clients/{clientId}", client.getClientId()).contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_BODY.replace("\"password\":\"Clave1234\",", "").replace("true", "false")))
                 .andExpect(status().isOk());
         verify(updateClient).execute(client.getClientId(), expected);
@@ -215,7 +215,7 @@ class ClientControllerTest {
 
     @Test
     void putRequiresEveryField() throws Exception {
-        mvc.perform(put("/clientes/{clientId}", client.getClientId()).contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(put("/clients/{clientId}", client.getClientId()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Jose Lema\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
@@ -227,7 +227,7 @@ class ClientControllerTest {
         ClientChanges onlyActive = new ClientChanges(null, null, null, null, null, null, null, false);
         when(updateClient.execute(client.getClientId(), onlyActive)).thenReturn(client);
 
-        mvc.perform(patch("/clientes/{clientId}", client.getClientId()).contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(patch("/clients/{clientId}", client.getClientId()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"active\":false}"))
                 .andExpect(status().isOk());
         verify(updateClient).execute(eq(client.getClientId()), eq(onlyActive));
@@ -235,7 +235,7 @@ class ClientControllerTest {
 
     @Test
     void patchValidatesThePresentFields() throws Exception {
-        mvc.perform(patch("/clientes/{clientId}", client.getClientId()).contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(patch("/clients/{clientId}", client.getClientId()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"age\":200}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[0].message").value("Age must be between 0 and 120"));
@@ -243,13 +243,13 @@ class ClientControllerTest {
 
     @Test
     void f1Ac5DeletesAClient() throws Exception {
-        mvc.perform(delete("/clientes/{clientId}", client.getClientId())).andExpect(status().isNoContent());
+        mvc.perform(delete("/clients/{clientId}", client.getClientId())).andExpect(status().isNoContent());
         verify(deleteClient).execute(client.getClientId());
     }
 
     @Test
     void answersMethodNotAllowed() throws Exception {
-        mvc.perform(post("/clientes/{clientId}", client.getClientId()))
+        mvc.perform(post("/clients/{clientId}", client.getClientId()))
                 .andExpect(status().isMethodNotAllowed())
                 .andExpect(header().exists("Allow"))
                 .andExpect(jsonPath("$.code").value("METHOD_NOT_ALLOWED"));
@@ -257,14 +257,14 @@ class ClientControllerTest {
 
     @Test
     void answersUnsupportedMediaType() throws Exception {
-        mvc.perform(post("/clientes").contentType(MediaType.TEXT_PLAIN).content("hola"))
+        mvc.perform(post("/clients").contentType(MediaType.TEXT_PLAIN).content("hola"))
                 .andExpect(status().isUnsupportedMediaType())
                 .andExpect(jsonPath("$.code").value("UNSUPPORTED_MEDIA_TYPE"));
     }
 
     @Test
     void answersNotFoundForAnUnknownRoute() throws Exception {
-        mvc.perform(get("/desconocido"))
+        mvc.perform(get("/unknown"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"));
     }
@@ -273,7 +273,7 @@ class ClientControllerTest {
     void usesTheStatusNameAsCodeForOtherHttpErrors() throws Exception {
         when(getClient.execute(client.getClientId())).thenReturn(client);
 
-        mvc.perform(get("/clientes/{clientId}", client.getClientId()).accept(MediaType.APPLICATION_XML))
+        mvc.perform(get("/clients/{clientId}", client.getClientId()).accept(MediaType.APPLICATION_XML))
                 .andExpect(status().isNotAcceptable());
     }
 
@@ -281,7 +281,7 @@ class ClientControllerTest {
     void hidesTheDetailsOfUnexpectedErrors() throws Exception {
         when(getClient.execute(client.getClientId())).thenThrow(new IllegalStateException("connection refused"));
 
-        mvc.perform(get("/clientes/{clientId}", client.getClientId()))
+        mvc.perform(get("/clients/{clientId}", client.getClientId()))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
                 .andExpect(jsonPath("$.detail").value("An unexpected error occurred. Please try again later."));
@@ -291,7 +291,7 @@ class ClientControllerTest {
     void echoesAValidCorrelationId() throws Exception {
         when(getClient.execute(client.getClientId())).thenReturn(client);
 
-        mvc.perform(get("/clientes/{clientId}", client.getClientId()).header(CorrelationIdFilter.HEADER, "abc-123"))
+        mvc.perform(get("/clients/{clientId}", client.getClientId()).header(CorrelationIdFilter.HEADER, "abc-123"))
                 .andExpect(header().string(CorrelationIdFilter.HEADER, "abc-123"));
     }
 
@@ -299,7 +299,7 @@ class ClientControllerTest {
     void replacesAnInvalidCorrelationId() throws Exception {
         when(getClient.execute(client.getClientId())).thenReturn(client);
 
-        mvc.perform(get("/clientes/{clientId}", client.getClientId()).header(CorrelationIdFilter.HEADER, "bad id!"))
+        mvc.perform(get("/clients/{clientId}", client.getClientId()).header(CorrelationIdFilter.HEADER, "bad id!"))
                 .andExpect(header().string(CorrelationIdFilter.HEADER,
                         matchesPattern("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")));
     }

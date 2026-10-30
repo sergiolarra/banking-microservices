@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Size;
 
 import static com.bank.clients.infrastructure.rest.dto.ClientConstraints.*;
 
-/** Body of {@code PUT /clientes/{clientId}}: replaces every field; the password is optional. */
+/** Body of {@code PUT /clients/{clientId}}: replaces every field; the password is optional. */
 public record ClientUpdateRequest(
         @NotBlank(message = NAME_REQUIRED) @Size(min = 2, max = 100, message = NAME_SIZE) String name,
         @NotNull(message = GENDER_REQUIRED) Gender gender,
