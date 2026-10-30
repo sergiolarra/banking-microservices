@@ -28,7 +28,7 @@ import java.util.Locale;
 /**
  * The single place where errors become RFC 7807 responses (ADR-014, SPEC §8).
  * Domain errors are mapped through their {@link ErrorCategory} (ADR-026); Spring MVC
- * errors keep the status Spring assigns and get a catalog code and a Spanish title.
+ * errors keep the status Spring assigns and get a catalog code and an English title (ADR-027).
  */
 @Slf4j
 @RestControllerAdvice
@@ -54,8 +54,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ResponseEntity<Object> handleUnexpected(Exception ex, WebRequest request) {
         log.error("Unexpected error", ex);
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Ocurrió un error inesperado. Intente nuevamente más tarde.");
-        return respond(problem, "INTERNAL_ERROR", "Error interno", new HttpHeaders(), request);
+                "An unexpected error occurred. Please try again later.");
+        return respond(problem, "INTERNAL_ERROR", "Internal error", new HttpHeaders(), request);
     }
 
     @Override
@@ -66,9 +66,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .sorted(Comparator.comparing(FieldErrorDetail::field).thenComparing(FieldErrorDetail::message))
                 .toList();
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
-                "La solicitud contiene datos inválidos");
+                "The request contains invalid data");
         problem.setProperty("errors", errors);
-        return respond(problem, "VALIDATION_ERROR", "Datos de entrada inválidos", headers, request);
+        return respond(problem, "VALIDATION_ERROR", "Invalid input", headers, request);
     }
 
     @Override
@@ -80,17 +80,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                 error.getDefaultMessage())))
                 .toList();
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
-                "Uno o más parámetros tienen valores inválidos");
+                "One or more parameters have invalid values");
         problem.setProperty("errors", errors);
-        return respond(problem, "INVALID_PARAMETER", "Parámetro inválido", headers, request);
+        return respond(problem, "INVALID_PARAMETER", "Invalid parameter", headers, request);
     }
 
     @Override
     protected ResponseEntity<Object> handleTypeMismatch(
             TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
-                "El parámetro '%s' tiene un valor inválido".formatted(ex.getPropertyName()));
-        return respond(problem, "INVALID_PARAMETER", "Parámetro inválido", headers, request);
+                "Parameter '%s' has an invalid value".formatted(ex.getPropertyName()));
+        return respond(problem, "INVALID_PARAMETER", "Invalid parameter", headers, request);
     }
 
     @Override
@@ -98,16 +98,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             MissingServletRequestParameterException ex, HttpHeaders headers, HttpStatusCode status,
             WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
-                "Falta el parámetro obligatorio '%s'".formatted(ex.getParameterName()));
-        return respond(problem, "INVALID_PARAMETER", "Parámetro inválido", headers, request);
+                "Required parameter '%s' is missing".formatted(ex.getParameterName()));
+        return respond(problem, "INVALID_PARAMETER", "Invalid parameter", headers, request);
     }
 
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(
             HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
-                "El cuerpo de la solicitud no es un JSON válido o contiene valores no permitidos");
-        return respond(problem, "MALFORMED_JSON", "Cuerpo de la solicitud inválido", headers, request);
+                "The request body is not valid JSON or contains values that are not allowed");
+        return respond(problem, "MALFORMED_JSON", "Malformed request body", headers, request);
     }
 
     /** Remaining Spring MVC errors (404 route, 405, 415…): keep their status, add code and title. */
@@ -116,13 +116,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             Exception ex, Object body, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         ProblemDetail problem = body instanceof ProblemDetail detail ? detail : ProblemDetail.forStatus(status);
         return switch (status.value()) {
-            case 404 -> respond(withDetail(problem, "No existe el recurso solicitado"),
-                    "RESOURCE_NOT_FOUND", "Recurso no encontrado", headers, request);
-            case 405 -> respond(withDetail(problem, "El método HTTP no está permitido en este recurso"),
-                    "METHOD_NOT_ALLOWED", "Método no permitido", headers, request);
-            case 415 -> respond(withDetail(problem, "El tipo de contenido no está soportado; use application/json"),
-                    "UNSUPPORTED_MEDIA_TYPE", "Tipo de contenido no soportado", headers, request);
-            default -> respond(problem, codeOf(status), "Error en la solicitud", headers, request);
+            case 404 -> respond(withDetail(problem, "The requested resource does not exist"),
+                    "RESOURCE_NOT_FOUND", "Resource not found", headers, request);
+            case 405 -> respond(withDetail(problem, "The HTTP method is not allowed on this resource"),
+                    "METHOD_NOT_ALLOWED", "Method not allowed", headers, request);
+            case 415 -> respond(withDetail(problem, "The content type is not supported; use application/json"),
+                    "UNSUPPORTED_MEDIA_TYPE", "Unsupported media type", headers, request);
+            default -> respond(problem, codeOf(status), "Request error", headers, request);
         };
     }
 

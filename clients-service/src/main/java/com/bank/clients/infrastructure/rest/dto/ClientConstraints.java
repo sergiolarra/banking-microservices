@@ -1,27 +1,27 @@
 package com.bank.clients.infrastructure.rest.dto;
 
-/** Input rules shared by the client requests (SPEC §4.1, §4.2). Messages are user-facing (ADR-023). */
+/** Input rules shared by the client requests (SPEC §4.1, §4.2). Messages are in English (ADR-027). */
 final class ClientConstraints {
 
     static final String IDENTIFICATION_REGEX = "^[A-Za-z0-9]{5,20}$";
     static final String PHONE_REGEX = "^\\+?[0-9]{7,15}$";
     static final String PASSWORD_REGEX = "^(?=.*[A-Za-z])(?=.*\\d).{8,64}$";
 
-    static final String NAME_REQUIRED = "El nombre es obligatorio";
-    static final String NAME_SIZE = "El nombre debe tener entre 2 y 100 caracteres";
-    static final String GENDER_REQUIRED = "El género es obligatorio";
-    static final String AGE_REQUIRED = "La edad es obligatoria";
-    static final String AGE_RANGE = "La edad debe estar entre 0 y 120";
-    static final String IDENTIFICATION_REQUIRED = "La identificación es obligatoria";
-    static final String IDENTIFICATION_FORMAT = "La identificación debe tener entre 5 y 20 caracteres alfanuméricos";
-    static final String ADDRESS_REQUIRED = "La dirección es obligatoria";
-    static final String ADDRESS_SIZE = "La dirección debe tener entre 5 y 200 caracteres";
-    static final String PHONE_REQUIRED = "El teléfono es obligatorio";
-    static final String PHONE_FORMAT = "El teléfono debe tener entre 7 y 15 dígitos, opcionalmente precedido de +";
-    static final String PASSWORD_REQUIRED = "La contraseña es obligatoria";
+    static final String NAME_REQUIRED = "Name is required";
+    static final String NAME_SIZE = "Name must be between 2 and 100 characters long";
+    static final String GENDER_REQUIRED = "Gender is required";
+    static final String AGE_REQUIRED = "Age is required";
+    static final String AGE_RANGE = "Age must be between 0 and 120";
+    static final String IDENTIFICATION_REQUIRED = "Identification is required";
+    static final String IDENTIFICATION_FORMAT = "Identification must be 5 to 20 alphanumeric characters";
+    static final String ADDRESS_REQUIRED = "Address is required";
+    static final String ADDRESS_SIZE = "Address must be between 5 and 200 characters long";
+    static final String PHONE_REQUIRED = "Phone is required";
+    static final String PHONE_FORMAT = "Phone must have 7 to 15 digits, optionally preceded by +";
+    static final String PASSWORD_REQUIRED = "Password is required";
     static final String PASSWORD_FORMAT =
-            "La contraseña debe tener entre 8 y 64 caracteres, con al menos una letra y un dígito";
-    static final String ACTIVE_REQUIRED = "El estado es obligatorio";
+            "Password must be 8 to 64 characters long and contain at least one letter and one digit";
+    static final String ACTIVE_REQUIRED = "Active state is required";
 
     private ClientConstraints() {
     }

@@ -94,13 +94,13 @@ class ClientControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
-                .andExpect(jsonPath("$.title").value("Datos de entrada inválidos"))
+                .andExpect(jsonPath("$.title").value("Invalid input"))
                 .andExpect(jsonPath("$.type").value("https://bank.local/errors/validation-error"))
                 .andExpect(jsonPath("$.instance").value("/clientes"))
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.errors", hasSize(3)))
                 .andExpect(jsonPath("$.errors[0].field").value("name"))
-                .andExpect(jsonPath("$.errors[0].message").value("El nombre debe tener entre 2 y 100 caracteres"))
+                .andExpect(jsonPath("$.errors[0].message").value("Name must be between 2 and 100 characters long"))
                 .andExpect(jsonPath("$.errors[1].field").value("password"))
                 .andExpect(jsonPath("$.errors[2].field").value("phone"));
         verifyNoInteractions(createClient);
@@ -128,19 +128,19 @@ class ClientControllerTest {
         mvc.perform(post("/clientes").contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("DUPLICATE_RESOURCE"))
-                .andExpect(jsonPath("$.title").value("Recurso duplicado"))
-                .andExpect(jsonPath("$.detail").value("Ya existe un cliente con la identificación 1712345678"));
+                .andExpect(jsonPath("$.title").value("Duplicate resource"))
+                .andExpect(jsonPath("$.detail").value("A client with identification 1712345678 already exists"));
     }
 
     @Test
     void f1Ac3AnswersUnprocessableForAnUnderageClient() throws Exception {
-        when(createClient.execute(any())).thenThrow(new BusinessRuleException("El cliente debe ser mayor de edad"));
+        when(createClient.execute(any())).thenThrow(new BusinessRuleException("The client must be at least 18 years old"));
 
         mvc.perform(post("/clientes").contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_BODY.replace("\"age\":35", "\"age\":17")))
                 .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.code").value("BUSINESS_RULE_VIOLATION"))
-                .andExpect(jsonPath("$.detail").value("El cliente debe ser mayor de edad"));
+                .andExpect(jsonPath("$.detail").value("The client must be at least 18 years old"));
     }
 
     @Test
@@ -170,7 +170,7 @@ class ClientControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_PARAMETER"))
                 .andExpect(jsonPath("$.errors[0].field").value("size"))
-                .andExpect(jsonPath("$.errors[0].message").value("size debe estar entre 1 y 100"));
+                .andExpect(jsonPath("$.errors[0].message").value("size must be between 1 and 100"));
     }
 
     @Test
@@ -198,7 +198,7 @@ class ClientControllerTest {
         mvc.perform(get("/clientes/{clientId}", "abc"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_PARAMETER"))
-                .andExpect(jsonPath("$.detail").value("El parámetro 'clientId' tiene un valor inválido"));
+                .andExpect(jsonPath("$.detail").value("Parameter 'clientId' has an invalid value"));
     }
 
     @Test
@@ -238,7 +238,7 @@ class ClientControllerTest {
         mvc.perform(patch("/clientes/{clientId}", client.getClientId()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"age\":200}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[0].message").value("La edad debe estar entre 0 y 120"));
+                .andExpect(jsonPath("$.errors[0].message").value("Age must be between 0 and 120"));
     }
 
     @Test
@@ -284,7 +284,7 @@ class ClientControllerTest {
         mvc.perform(get("/clientes/{clientId}", client.getClientId()))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
-                .andExpect(jsonPath("$.detail").value("Ocurrió un error inesperado. Intente nuevamente más tarde."));
+                .andExpect(jsonPath("$.detail").value("An unexpected error occurred. Please try again later."));
     }
 
     @Test

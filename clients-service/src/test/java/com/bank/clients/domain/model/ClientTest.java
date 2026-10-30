@@ -35,10 +35,10 @@ class ClientTest {
         void rejectsAnUnderageClient() {
             assertThatThrownBy(() -> Client.create(detailsWithAge(17), PASSWORD_HASH, true))
                     .isInstanceOfSatisfying(BusinessRuleException.class, error -> {
-                        assertThat(error).hasMessage("El cliente debe ser mayor de edad");
+                        assertThat(error).hasMessage("The client must be at least 18 years old");
                         assertThat(error.code()).isEqualTo("BUSINESS_RULE_VIOLATION");
                         assertThat(error.category()).isEqualTo(ErrorCategory.BUSINESS_RULE);
-                        assertThat(error.title()).isEqualTo("Regla de negocio incumplida");
+                        assertThat(error.title()).isEqualTo("Business rule violation");
                     });
         }
 
@@ -52,14 +52,14 @@ class ClientTest {
         void stillAppliesThePersonAgeRangeAboveTheMinimum() {
             assertThatThrownBy(() -> Client.create(detailsWithAge(121), PASSWORD_HASH, true))
                     .isInstanceOf(BusinessRuleException.class)
-                    .hasMessage("La edad debe estar entre 0 y 120");
+                    .hasMessage("Age must be between 0 and 120");
         }
 
         @Test
         void rejectsMissingDetails() {
             assertThatThrownBy(() -> Client.create(null, PASSWORD_HASH, true))
                     .isInstanceOf(BusinessRuleException.class)
-                    .hasMessage("Los datos personales son obligatorios");
+                    .hasMessage("Personal details are required");
         }
     }
 
@@ -159,7 +159,7 @@ class ClientTest {
 
             assertThatThrownBy(() -> client.changePassword(hash))
                     .isInstanceOf(BusinessRuleException.class)
-                    .hasMessage("La contraseña es obligatoria");
+                    .hasMessage("Password is required");
             assertThat(client.getPasswordHash()).isEqualTo(PASSWORD_HASH);
         }
 
@@ -167,7 +167,7 @@ class ClientTest {
         void requiresAHashOnCreation() {
             assertThatThrownBy(() -> Client.create(detailsWithAge(35), " ", true))
                     .isInstanceOf(BusinessRuleException.class)
-                    .hasMessage("La contraseña es obligatoria");
+                    .hasMessage("Password is required");
         }
     }
 
@@ -195,7 +195,7 @@ class ClientTest {
 
             assertThatThrownBy(() -> client.updateDetails(detailsWithAge(16)))
                     .isInstanceOf(BusinessRuleException.class)
-                    .hasMessage("El cliente debe ser mayor de edad");
+                    .hasMessage("The client must be at least 18 years old");
             assertThat(client.getDetails()).isEqualTo(before);
         }
 

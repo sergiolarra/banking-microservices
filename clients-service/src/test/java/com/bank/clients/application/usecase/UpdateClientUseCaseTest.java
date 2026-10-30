@@ -133,6 +133,6 @@ class UpdateClientUseCaseTest {
 
         assertThatThrownBy(() -> useCase.execute(unknown, NO_CHANGES))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("No existe un cliente con clientId " + unknown);
+                .hasMessage("No client exists with clientId " + unknown);
     }
 }

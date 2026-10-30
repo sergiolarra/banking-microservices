@@ -19,6 +19,6 @@ public class BusinessRuleException extends DomainException {
 
     @Override
     public String title() {
-        return "Regla de negocio incumplida";
+        return "Business rule violation";
     }
 }
