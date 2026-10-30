@@ -33,7 +33,7 @@ Los identificadores de código aparecen en inglés (ADR-023). El glosario españ
 | [ADR-023](#adr-023--idioma-del-código-y-de-los-commits) | Código y commits en inglés; mensajes y docs en español | Aceptada |
 | [ADR-024](#adr-024--principios-solid) | Principios SOLID como guía de diseño | Aceptada |
 | [ADR-025](#adr-025--integración-continua-y-umbral-de-cobertura) | CI con GitHub Actions y cobertura mínima del 80 % | Aceptada |
-| [ADR-026](#adr-026--categoría-de-error-en-lugar-de-estado-http-en-el-dominio) | Categoría de error en el dominio; el estado HTTP lo decide REST | Aceptada (precisa ADR-014 y ADR-024) |
+| [ADR-026](#adr-026--categoría-de-error-en-lugar-de-estado-http-en-el-dominio) | Categoría de error en el dominio; el estado HTTP lo decide REST | Aceptada (precisa ADR-014 y ADR-024; adenda Fase 3) |
 
 ---
 
@@ -409,6 +409,8 @@ Librerías fuera del BOM: springdoc-openapi **3.2.0** (compilada contra Boot 4.1
 - Agregar un error nuevo sigue siendo crear una clase, sin tocar el manejador.
 - El dominio puede reutilizarse con otra entrada (mensajería, CLI) sin arrastrar conceptos HTTP.
 - El catálogo de SPEC §8 no cambia.
+
+**Adenda (Fase 3).** `accounts-service` agrega la categoría `INVALID_INPUT` → 400. El rango de fechas del reporte (`DateRange`) es un objeto de dominio con reglas propias (`from <= to`, máximo 366 días) y, si se incumplen, debe responder 400 `INVALID_PARAMETER` (F4-AC4), no 422. Es una extensión, no un cambio de la decisión: cada servicio declara las categorías que necesita y el manejador REST sigue traduciéndolas en un único lugar.
 
 ---
 

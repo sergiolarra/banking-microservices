@@ -2,7 +2,7 @@
 
 | Versión | Estado | Fecha | Decisiones |
 |---------|--------|-------|------------|
-| 1.3 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
+| 1.4 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
 
 > **Regla de oro (SDD).** Este documento es la fuente de verdad. El código implementa lo que dice la spec. Si hay que cambiar un comportamiento, primero se cambia aquí. Cada criterio de aceptación (`Fx-ACy`) debe tener al menos una prueba que lo nombre.
 
@@ -454,8 +454,8 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 - [x] T2.5 Pruebas de casos de uso y `@WebMvcTest`
 
 **Fase 3 — `accounts-service`: dominio** (F2, F3) · rama `feat/phase-3-account-domain`
-- [ ] T3.1 `Account`, `Movement`, `ClientSnapshot`, `DateRange`, excepciones
-- [ ] T3.2 `AccountTest` (ACC-1 … ACC-5), `DateRangeTest`
+- [x] T3.1 `Account`, `Movement`, `ClientSnapshot`, `DateRange`, excepciones
+- [x] T3.2 `AccountTest` (ACC-1 … ACC-5), `DateRangeTest`
 
 **Fase 4 — `accounts-service`: aplicación e infraestructura** (F1, F2, F3) · rama `feat/phase-4-account-api`
 - [ ] T4.1 Migraciones Flyway, entidades JPA, repositorios con lock pesimista
@@ -490,3 +490,4 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 | 1.1 | 2026-10-30 | Principio 11, CI y cobertura mínima (ADR-025); tareas T0.4 y T7.5 |
 | 1.2 | 2026-10-30 | Errores de dominio con categoría en lugar de estado HTTP (ADR-026). Fase 1 completada |
 | 1.3 | 2026-10-30 | `version` pasa de `client` a `person` (Hibernate exige `@Version` en la entidad raíz de la herencia); colas durables por RabbitMQ 4. Fase 2 completada |
+| 1.4 | 2026-10-30 | Categoría `INVALID_INPUT` en `accounts-service` para `DateRange` (adenda a ADR-026). Fase 3 completada |
