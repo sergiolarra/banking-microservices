@@ -1,4 +1,4 @@
-# Local infrastructure. The microservices are added in Phase 7 (F7).
+# The whole system (F7): `docker compose up -d --build --wait`.
 # Default credentials are for local development only; override them with a .env file.
 name: banking-microservices
 
@@ -37,6 +37,54 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
+
+  clients-service:
+    build: ./clients-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/clients_db
+      DB_USERNAME: clients_user
+      DB_PASSWORD: ${CLIENTS_DB_PASSWORD:-clients_pass}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: ${RABBITMQ_USER:-bank}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-bank}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8080/actuator/health/readiness"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+  accounts-service:
+    build: ./accounts-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/accounts_db
+      DB_USERNAME: accounts_user
+      DB_PASSWORD: ${ACCOUNTS_DB_PASSWORD:-accounts_pass}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: ${RABBITMQ_USER:-bank}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-bank}
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8081/actuator/health/readiness"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     restart: unless-stopped
 
 volumes:
