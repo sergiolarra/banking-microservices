@@ -2,7 +2,7 @@
 
 | Versión | Estado | Fecha | Decisiones |
 |---------|--------|-------|------------|
-| 1.7 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
+| 1.8 | **Aprobada** (PR #1) · cambios posteriores vía ADR | 2026-10-30 | [DECISIONES.md](./DECISIONES.md) |
 
 > **Regla de oro (SDD).** Este documento es la fuente de verdad. El código implementa lo que dice la spec. Si hay que cambiar un comportamiento, primero se cambia aquí. Cada criterio de aceptación (`Fx-ACy`) debe tener al menos una prueba que lo nombre.
 
@@ -427,7 +427,7 @@ Todas las respuestas de error son `application/problem+json` con `type`, `title`
 | F1 | `ClientController`, casos de uso de Client, `AccountController`, `MovementController`, adaptadores JPA | Pruebas de casos de uso + `@WebMvcTest` + Postman |
 | F2 | `Account.registerMovement`, `RegisterMovementUseCase`, `AccountJpaRepository` (lock) | `AccountTest`, `MovementIntegrationTest` (incl. concurrencia) |
 | F3 | `InsufficientFundsException`, `GlobalExceptionHandler` | `AccountTest`, `MovementIntegrationTest`, Postman |
-| F4 | `GenerateAccountStatementUseCase`, `ReportController`, `DateRange` (value object) | `DateRangeTest`, `GenerateAccountStatementUseCaseTest`, Postman |
+| F4 | `GenerateAccountStatementUseCase`, `AccountStatement`, `ReportController`, `DateRange` (value object) | `DateRangeTest`, `AccountStatementTest`, `GenerateAccountStatementUseCaseTest`, `ReportControllerTest`, `AccountStatementIntegrationTest` (incl. F4-AC6), Postman |
 | F5 | `Client` (dominio) | `ClientTest` |
 | F6 | Contexto completo + Testcontainers | `MovementIntegrationTest`, `ClientEventsIntegrationTest` |
 | F7 | `Dockerfile` ×2, `docker-compose.yml`, `database.sql`, `postman/` | `docker compose up` + colección Postman, automatizado en el job `docker-e2e` de CI |
@@ -463,7 +463,7 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 - [x] T4.3 Casos de uso y REST de cuentas y movimientos + manejo de errores
 
 **Fase 5 — Reporte** (F4) · rama `feat/phase-5-account-statement`
-- [ ] T5.1 `GenerateAccountStatementUseCase` + consultas optimizadas + `ReportController`
+- [x] T5.1 `GenerateAccountStatementUseCase` + consultas optimizadas + `ReportController`
 
 **Fase 6 — Integración** (F6) · rama `test/phase-6-integration`
 - [ ] T6.1 `MovementIntegrationTest` (incl. F2-AC5 concurrencia)
@@ -494,3 +494,4 @@ Cada fase termina en verde (`mvn verify`) antes de pasar a la siguiente. Una ram
 | 1.5 | 2026-10-30 | Mensajes de error en inglés, incluido F3 (`"Insufficient funds"`); el reporte F4 se llama "Account statement" (ADR-027) |
 | 1.6 | 2026-10-30 | Rutas y parámetros REST en inglés: `/clients`, `/accounts`, `/movements`, `/reports?date=…&client=…` (ADR-028) |
 | 1.7 | 2026-10-30 | Fase 4 completada (persistencia, consumidor de eventos y API de `accounts-service`); T6.2 adelantada |
+| 1.8 | 2026-10-30 | Fase 5 completada: reporte `GET /reports` (F4) |

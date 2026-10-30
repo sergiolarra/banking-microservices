@@ -69,4 +69,5 @@ banking-microservices/
 | 2 | API REST `/clients`, persistencia JPA + Flyway, BCrypt, errores RFC 7807 y outbox → RabbitMQ | ✅ |
 | 3 | Dominio de `accounts-service` (`Account`, `Movement`, `ClientSnapshot`, `DateRange`) y reglas F2/F3 | ✅ |
 | 4 | `accounts-service`: API `/accounts` y `/movements`, bloqueo por cuenta, consumidor de eventos idempotente con reintentos y DLQ | ✅ |
-| 5–7 | Ver plan en [SPEC §13](docs/SPEC.md#13-plan-de-implementación-tareas) | Pendiente |
+| 5 | Reporte *Account statement* `GET /reports?date=from,to&client=…` con 3 consultas como máximo | ✅ |
+| 6–7 | Ver plan en [SPEC §13](docs/SPEC.md#13-plan-de-implementación-tareas) | Pendiente |
