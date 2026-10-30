@@ -67,7 +67,7 @@ class AccountPersistenceAdapter implements AccountRepository {
 
     @Override
     public List<Account> findAllByClientId(UUID clientId) {
-        return repository.findAllByClientId(clientId).stream().map(mapper::toDomain).toList();
+        return repository.findAllByClientIdOrderByAccountNumber(clientId).stream().map(mapper::toDomain).toList();
     }
 
     @Override

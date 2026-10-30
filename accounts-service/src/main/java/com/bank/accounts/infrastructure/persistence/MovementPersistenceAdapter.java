@@ -11,7 +11,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /** Implements the {@link MovementRepository} port with Spring Data JPA. */
 @Component
@@ -40,6 +43,11 @@ class MovementPersistenceAdapter implements MovementRepository {
     public Optional<Movement> findLatestByAccountNumber(String accountNumber) {
         return movements.findFirstByAccountAccountNumberOrderByMovementDateDescIdDesc(accountNumber)
                 .map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Movement> findByClientIdBetween(UUID clientId, Instant from, Instant to) {
+        return movements.findByClientIdBetween(clientId, from, to).stream().map(mapper::toDomain).toList();
     }
 
     @Override
